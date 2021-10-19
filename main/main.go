@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
-	stack "vilmos/stack"
+	inter "vilmos/interpreter"
 )
 
 func main() {
-	s := stack.NewIntStack()
+	i := inter.NewInterpreter()
 
-	s.Push(1)
-	item, _ := s.Pop()
-	fmt.Printf("%d", item)
+	err := i.LoadImage("C:\\Users\\User\\Desktop\\hello.jpg")
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+	}
 
+	i.Run()
 }
