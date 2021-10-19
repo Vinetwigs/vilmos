@@ -7,6 +7,8 @@ type Pair struct {
 
 func NewPair() *Pair {
 	p := new(Pair)
+	p.x = 0
+	p.y = 0
 	return p
 }
 
