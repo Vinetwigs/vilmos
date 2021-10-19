@@ -6,9 +6,12 @@ import (
 	"image/jpeg"
 	"image/png"
 	"os"
-	"strconv"
 	pixel "vilmos/pixel"
 	stack "vilmos/stack"
+)
+
+var (
+	WHITE pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255}
 )
 
 const (
@@ -65,7 +68,6 @@ func (i *Interpreter) LoadImage(path string) error {
 		i.image = image
 
 		WIDTH, HEIGTH = i.image.Bounds().Max.X, i.image.Bounds().Max.Y
-		fmt.Print("W: " + strconv.Itoa(WIDTH) + " H: " + strconv.Itoa(HEIGTH))
 		return nil
 	}
 }
@@ -84,7 +86,7 @@ func (i *Interpreter) Run() {
 
 func (i *Interpreter) Step(x int, y int) bool {
 	pixel := readPixel(i, x, y)
-	println(pixel.String())
+	fmt.Println(pixel.String())
 	return true
 }
 
