@@ -56,3 +56,12 @@ func (i *Interpreter) LoadImage(path string) error {
 func (i *Interpreter) GetImage() image.Image {
 	return i.image
 }
+
+func (i *Interpreter) Run() {
+	for i.Step() {
+	}
+}
+
+func (i *Interpreter) Step() bool {
+	return true
+}
