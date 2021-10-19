@@ -3,16 +3,38 @@ package interpreter
 import (
 	"image"
 	"os"
+	stack "vilmos/stack"
+)
+
+const (
+	INT_TYPE = iota
+	STRING_TYPE
 )
 
 type Interpreter struct {
-	image image.Image
+	image       image.Image
+	intstack    stack.IntStack
+	stringstack stack.StringStack
+	_type       int
 }
 
 func NewInterpreter() *Interpreter {
 	interpreter := new(Interpreter)
 	interpreter.image = nil
+	interpreter._type = INT_TYPE
 	return interpreter
+}
+
+/*
+	0 = INT_TYPE
+	> 0 = STRING_TYPE
+*/
+func (i *Interpreter) SetType(t int) {
+	if t != 0 {
+		i._type = INT_TYPE
+	} else {
+		i._type = STRING_TYPE
+	}
 }
 
 func (i *Interpreter) LoadImage(path string) error {
