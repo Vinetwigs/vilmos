@@ -1,14 +1,24 @@
 package interpreter
 
 import (
+	"fmt"
 	"image"
+	"image/jpeg"
+	"image/png"
 	"os"
+	"strconv"
+	pixel "vilmos/pixel"
 	stack "vilmos/stack"
 )
 
 const (
 	INT_TYPE = iota
 	STRING_TYPE
+)
+
+var (
+	WIDTH  int = 0
+	HEIGTH int = 0
 )
 
 type Interpreter struct {
@@ -22,6 +32,10 @@ func NewInterpreter() *Interpreter {
 	interpreter := new(Interpreter)
 	interpreter.image = nil
 	interpreter._type = INT_TYPE
+
+	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
+	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
+
 	return interpreter
 }
 
@@ -49,6 +63,9 @@ func (i *Interpreter) LoadImage(path string) error {
 		return err
 	} else {
 		i.image = image
+
+		WIDTH, HEIGTH = i.image.Bounds().Max.X, i.image.Bounds().Max.Y
+		fmt.Print("W: " + strconv.Itoa(WIDTH) + " H: " + strconv.Itoa(HEIGTH))
 		return nil
 	}
 }
@@ -58,10 +75,23 @@ func (i *Interpreter) GetImage() image.Image {
 }
 
 func (i *Interpreter) Run() {
-	for i.Step() {
+	for y := 0; y < HEIGTH; y++ {
+		for x := 0; x < WIDTH; x++ {
+			i.Step(x, y)
+		}
 	}
 }
 
-func (i *Interpreter) Step() bool {
+func (i *Interpreter) Step(x int, y int) bool {
+	pixel := readPixel(i, x, y)
+	println(pixel.String())
 	return true
+}
+
+func readPixel(i *Interpreter, x int, y int) pixel.Pixel {
+	return rgbaToPixel(i.image.At(x, y).RGBA())
+}
+
+func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) pixel.Pixel {
+	return pixel.Pixel{R: int(r / 257), G: int(g / 257), B: int(b / 257), A: int(a / 257)}
 }
