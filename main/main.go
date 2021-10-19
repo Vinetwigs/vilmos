@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
-
-	s "github.com/vinetwigs/vilmos"
+	stack "vilmos/stack"
 )
 
 func main() {
-	s := s.IntStack{}
-	s.NewIntStack()
+	s := stack.NewIntStack()
 
 	s.Push(1)
-	fmt.Printf("%d", s.Pop())
+	item, _ := s.Pop()
+	fmt.Printf("%d", item)
 
 }

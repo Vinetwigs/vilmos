@@ -1,32 +1,28 @@
 package stack
 
+import "errors"
+
 type IntStack struct {
 	items []int
 }
 
 func NewIntStack() *IntStack {
-	stack := make(IntStack)
-	stack.items = []int
-
-	return &stack
+	stack := new(IntStack)
+	return stack
 }
 
 func (stack *IntStack) Push(val int) {
-	if stack.items == nil {
-		stack.items = []int
-	}
-
 	stack.items = append(stack.items, val)
 }
 
-func (stack *IntStack) Pop() int {
+func (stack *IntStack) Pop() (int, error) {
 	if len(stack.items) == 0 {
-		return nil
+		return -1, errors.New("error: stack is empty, cannot pop")
 	}
 
 	item := stack.items[len(stack.items)-1]
 
-	return item
+	return item, nil
 }
 
 func (stack *IntStack) Size() int {

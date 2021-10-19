@@ -1,3 +1,3 @@
-module github.com/vinetwigs/vilmos
+module vilmos
 
 go 1.17
