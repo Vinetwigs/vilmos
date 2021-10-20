@@ -32,6 +32,8 @@ var (
 	LIGHT_BLACK      pixel.Pixel = pixel.Pixel{R: 75, G: 75, B: 75, A: 255}    //#4b4b4b -> OUTPUT ASCII
 	DARK_GOLD        pixel.Pixel = pixel.Pixel{R: 204, G: 158, B: 6, A: 255}   //#cc9e06 -> POP
 	GOLD             pixel.Pixel = pixel.Pixel{R: 255, G: 189, B: 74, A: 255}  //#ffbd4a -> SWAP
+	SHIMMERING_BLUSH pixel.Pixel = pixel.Pixel{R: 227, G: 127, B: 157, A: 255} //#e37f9d -> CYCLE
+	CHARM_PINK       pixel.Pixel = pixel.Pixel{R: 233, G: 148, B: 174, A: 255} //#e994ae -> RCYCLE
 )
 
 const (
@@ -276,6 +278,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		i.stack.Push(v1)
 		i.stack.Push(v2)
+	case SHIMMERING_BLUSH.String():
+		i.stack.Cycle()
+	case CHARM_PINK.String():
+		i.stack.RCycle()
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(sum)
