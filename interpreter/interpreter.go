@@ -15,14 +15,15 @@ import (
 )
 
 var (
-	WHITE     pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255} //#ffffff
-	BLACK     pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0, A: 255}       //#000000
-	TURQUOISE pixel.Pixel = pixel.Pixel{R: 0, G: 206, B: 209, A: 255}   //#00ced1
-	ORANGE    pixel.Pixel = pixel.Pixel{R: 255, G: 165, B: 0, A: 255}   //#ffa500
-	VIOLET    pixel.Pixel = pixel.Pixel{R: 138, G: 43, B: 226, A: 255}  //#8a2be2
-	RED       pixel.Pixel = pixel.Pixel{R: 139, G: 0, B: 0, A: 255}     //#8b0000
-	PEACH     pixel.Pixel = pixel.Pixel{R: 255, G: 218, B: 185, A: 255} //#ffdab9
-	GREEN     pixel.Pixel = pixel.Pixel{R: 0, G: 128, B: 0, A: 255}     //#008000
+	WHITE     pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255} //#ffffff -> INPUT INT
+	BLACK     pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0, A: 255}       //#000000 -> OUTPUT INT
+	TURQUOISE pixel.Pixel = pixel.Pixel{R: 0, G: 206, B: 209, A: 255}   //#00ced1 -> SUM
+	ORANGE    pixel.Pixel = pixel.Pixel{R: 255, G: 165, B: 0, A: 255}   //#ffa500 -> SUBTRACTION
+	VIOLET    pixel.Pixel = pixel.Pixel{R: 138, G: 43, B: 226, A: 255}  //#8a2be2 -> DIVISION
+	RED       pixel.Pixel = pixel.Pixel{R: 139, G: 0, B: 0, A: 255}     //#8b0000 -> MULTIPLICATION
+	PEACH     pixel.Pixel = pixel.Pixel{R: 255, G: 218, B: 185, A: 255} //#ffdab9 -> MODULUS
+	GREEN     pixel.Pixel = pixel.Pixel{R: 0, G: 128, B: 0, A: 255}     //#008000 -> RANDOM
+	BEIGE     pixel.Pixel = pixel.Pixel{R: 236, G: 243, B: 220, A: 255} //#ecf3dc -> OR
 )
 
 const (
@@ -189,6 +190,17 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		random := rand.Intn(n)
 		i.stack.Push(random)
+	case BEIGE.String(): //Pops two numbers, and pushes the result of OR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+		v1, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		v2, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		result := Itob(v1) && Itob(v2)
+		i.stack.Push(Btoi(result))
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(sum)
@@ -197,4 +209,15 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 
 func logError(e error) {
 	log.Println("\033[31m" + e.Error() + "\033[0m")
+}
+
+func Itob(i int) bool {
+	return i != 0
+}
+
+func Btoi(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }
