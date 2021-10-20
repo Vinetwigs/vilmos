@@ -252,7 +252,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		result := Itob(v1) != Itob(v2)
 		i.stack.Push(Btoi(result))
-	case PALE_LAVANDER.String(): //Pops two numbers, and pushes the result of XOR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+	case PALE_LAVANDER.String(): //Pops two numbers, and pushes the result of NAND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -289,11 +289,11 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		i.stack.Push(v1)
 		i.stack.Push(v2)
-	case SHIMMERING_BLUSH.String():
+	case SHIMMERING_BLUSH.String(): //Cycles clockwise the stack
 		i.stack.Cycle()
-	case CHARM_PINK.String():
+	case CHARM_PINK.String(): //Cycles anti-clockwise the stack
 		i.stack.RCycle()
-	case SEA_BLUE.String():
+	case SEA_BLUE.String(): //Duplicates the top of the stack
 		val, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
