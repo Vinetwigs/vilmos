@@ -17,6 +17,7 @@ var (
 	TURQUOISE pixel.Pixel = pixel.Pixel{R: 0, G: 206, B: 209, A: 255}   //#00ced1
 	ORANGE    pixel.Pixel = pixel.Pixel{R: 255, G: 165, B: 0, A: 255}   //#ffa500
 	VIOLET    pixel.Pixel = pixel.Pixel{R: 138, G: 43, B: 226, A: 255}  //#8a2be2
+	RED       pixel.Pixel = pixel.Pixel{R: 139, G: 0, B: 0, A: 255}     //#8b0000
 )
 
 const (
@@ -147,6 +148,17 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			logError(err)
 		}
 		sub := v1 / v2
+		i.stack.Push(sub)
+	case RED.String():
+		v1, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		v2, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		sub := v1 * v2
 		i.stack.Push(sub)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
