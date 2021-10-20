@@ -5,13 +5,15 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+	"log"
 	"os"
 	pixel "vilmos/pixel"
 	stack "vilmos/stack"
 )
 
 var (
-	WHITE pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255}
+	WHITE pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255} //#ffffff
+	BLACK pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0, A: 255}       //#000000
 )
 
 const (
@@ -25,9 +27,9 @@ var (
 )
 
 type Interpreter struct {
-	image    image.Image
-	intstack stack.Stack
-	_type    int
+	image image.Image
+	stack stack.Stack
+	_type int
 }
 
 func NewInterpreter() *Interpreter {
@@ -85,7 +87,7 @@ func (i *Interpreter) Run() {
 
 func (i *Interpreter) Step(x int, y int) bool {
 	pixel := readPixel(i, x, y)
-	processPixel(&pixel)
+	processPixel(&pixel, i)
 	return true
 }
 
@@ -97,9 +99,24 @@ func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) pixel.Pixel {
 	return pixel.Pixel{R: int(r / 257), G: int(g / 257), B: int(b / 257), A: int(a / 257)}
 }
 
-func processPixel(pixel *pixel.Pixel) {
+func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 	switch pixel.String() {
-	case WHITE.String():
-		fmt.Println("BIANCO")
+	case WHITE.String(): //Gets int from input and pushes it to the stack
+		var val uint8
+		fmt.Scanf("%c", &val)
+		i.stack.Push(val)
+	case BLACK.String(): //Pops the top of the stack and outputs it as number
+		val, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+			break
+		} else {
+			fmt.Printf("%c", val)
+			break
+		}
 	}
+}
+
+func logError(e error) {
+	log.Println("\033[31m" + e.Error() + "\033[0m")
 }
