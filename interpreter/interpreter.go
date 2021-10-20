@@ -28,7 +28,8 @@ var (
 	WHITE_CHOCOLATE  pixel.Pixel = pixel.Pixel{R: 245, G: 227, B: 215, A: 255} //#f5e3d7 -> XOR
 	PALE_LAVANDER    pixel.Pixel = pixel.Pixel{R: 225, G: 211, B: 239, A: 255} //#e1d3ef -> NAND
 	SALMON           pixel.Pixel = pixel.Pixel{R: 255, G: 154, B: 162, A: 255} //#ff9aa2 -> NOT
-
+	DARK_WHITE       pixel.Pixel = pixel.Pixel{R: 227, G: 227, B: 227, A: 255} //#e3e3e3 -> INPUT ASCII
+	LIGHT_BLACK      pixel.Pixel = pixel.Pixel{R: 75, G: 75, B: 75, A: 75}     //#4b4b4b -> OUTPUT ASCII
 )
 
 const (
@@ -122,12 +123,23 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		var val int
 		fmt.Scanf("%d\n", &val)
 		i.stack.Push(val)
+	case DARK_WHITE.String(): //Gets value from input as ASCII char and pushes it to the stack
+		var val rune
+		fmt.Scanf("%c\n", &val)
+		i.stack.Push(int(val))
 	case BLACK.String(): //Pops the top of the stack and outputs it as number
 		val, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
 		} else {
 			fmt.Printf("%d", val)
+		}
+	case LIGHT_BLACK.String(): //Pops the top of the stack and outputs it as ASCII char
+		val, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		} else {
+			fmt.Printf("%c", val)
 		}
 	case TURQUOISE.String(): //Pops two numbers, adds them and pushes the result in the stack
 		v1, err := i.stack.Pop()
