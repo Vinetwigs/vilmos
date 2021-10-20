@@ -15,6 +15,7 @@ var (
 	WHITE     pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255} //#ffffff
 	BLACK     pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0, A: 255}       //#000000
 	TURQUOISE pixel.Pixel = pixel.Pixel{R: 0, G: 206, B: 209, A: 255}   //#00ced1
+	ORANGE    pixel.Pixel = pixel.Pixel{R: 255, G: 165, B: 0, A: 255}   //#ffa500
 )
 
 const (
@@ -103,7 +104,7 @@ func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) pixel.Pixel {
 func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 	switch pixel.String() {
 	case WHITE.String(): //Gets value from input as number and pushes it to the stack
-		var val uint8
+		var val int
 		fmt.Scanf("%d\n", &val)
 		i.stack.Push(val)
 	case BLACK.String(): //Pops the top of the stack and outputs it as number
@@ -122,12 +123,22 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		if err != nil {
 			logError(err)
 		}
-
 		sum := v1 + v2
 		i.stack.Push(sum)
+	case ORANGE.String(): //Pops two numbers, subtracts them and pushes the result in the stack
+		v1, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		v2, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		sub := v1 - v2
+		i.stack.Push(sub)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
-		i.stack.Push(uint8(sum))
+		i.stack.Push(sum)
 	}
 }
 
