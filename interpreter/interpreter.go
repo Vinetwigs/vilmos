@@ -323,7 +323,7 @@ func Btoi(b bool) int {
 }
 
 func nand(a bool, b bool) bool {
-	if a == true && b == true {
+	if a && b {
 		return false
 	} else {
 		return true
