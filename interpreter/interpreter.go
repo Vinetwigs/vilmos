@@ -27,6 +27,7 @@ var (
 	LIGHT_STEEL_BLUE pixel.Pixel = pixel.Pixel{R: 183, G: 198, B: 230, A: 255} //#b7c6e6 -> OR
 	WHITE_CHOCOLATE  pixel.Pixel = pixel.Pixel{R: 245, G: 227, B: 215, A: 255} //#f5e3d7 -> XOR
 	PALE_LAVANDER    pixel.Pixel = pixel.Pixel{R: 225, G: 211, B: 239, A: 255} //#e1d3ef -> NAND
+	SALMON           pixel.Pixel = pixel.Pixel{R: 255, G: 154, B: 162, A: 255} //#ff9aa2 -> NOT
 
 )
 
@@ -238,6 +239,13 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		result := nand(Itob(v1), Itob(v2))
 		i.stack.Push(Btoi(result))
+	case SALMON.String(): //Pops one number, and pushes the result of NOT [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+		v1, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		result := Btoi(!Itob(v1))
+		i.stack.Push(result)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(sum)
