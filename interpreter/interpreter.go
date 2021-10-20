@@ -25,10 +25,9 @@ var (
 )
 
 type Interpreter struct {
-	image       image.Image
-	intstack    stack.IntStack
-	stringstack stack.StringStack
-	_type       int
+	image    image.Image
+	intstack stack.Stack
+	_type    int
 }
 
 func NewInterpreter() *Interpreter {
@@ -86,7 +85,7 @@ func (i *Interpreter) Run() {
 
 func (i *Interpreter) Step(x int, y int) bool {
 	pixel := readPixel(i, x, y)
-	fmt.Println(pixel.String())
+	processPixel(&pixel)
 	return true
 }
 
@@ -96,4 +95,11 @@ func readPixel(i *Interpreter, x int, y int) pixel.Pixel {
 
 func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) pixel.Pixel {
 	return pixel.Pixel{R: int(r / 257), G: int(g / 257), B: int(b / 257), A: int(a / 257)}
+}
+
+func processPixel(pixel *pixel.Pixel) {
+	switch pixel.String() {
+	case WHITE.String():
+		fmt.Println("BIANCO")
+	}
 }
