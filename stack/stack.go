@@ -15,6 +15,8 @@ func NewStack() *Stack {
 
 func (stack *Stack) Push(val int) {
 	stack.items = append(stack.items, val)
+
+	//fmt.Printf("Stack (push) -> %+v\n", stack.items)
 }
 
 func (stack *Stack) Pop() (int, error) {
@@ -25,6 +27,8 @@ func (stack *Stack) Pop() (int, error) {
 	index := len(stack.items) - 1 // Get the index of the top most element.
 	item := stack.items[index]    // Index into the slice and obtain the element.
 	stack.items = stack.items[:index]
+
+	//fmt.Printf("Stack (push) -> %+v\n", stack.items)
 	return item, nil
 }
 
