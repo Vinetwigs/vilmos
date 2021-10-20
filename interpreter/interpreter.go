@@ -31,7 +31,7 @@ var (
 	DARK_WHITE       pixel.Pixel = pixel.Pixel{R: 227, G: 227, B: 227, A: 255} //#e3e3e3 -> INPUT ASCII
 	LIGHT_BLACK      pixel.Pixel = pixel.Pixel{R: 75, G: 75, B: 75, A: 255}    //#4b4b4b -> OUTPUT ASCII
 	DARK_GOLD        pixel.Pixel = pixel.Pixel{R: 204, G: 158, B: 6, A: 255}   //#cc9e06 -> POP
-	GOLD             pixel.Pixel = pixel.Pixel{R: 204, G: 158, B: 6, A: 255}   //#ffbd4a -> SWAP
+	GOLD             pixel.Pixel = pixel.Pixel{R: 255, G: 189, B: 74, A: 255}  //#ffbd4a -> SWAP
 )
 
 const (
@@ -265,7 +265,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		if err != nil {
 			logError(err)
 		}
-	case GOLD.String():
+	case GOLD.String(): //Swaps the top two items in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
