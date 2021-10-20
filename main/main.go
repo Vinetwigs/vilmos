@@ -8,7 +8,7 @@ import (
 func main() {
 	i := inter.NewInterpreter()
 
-	err := i.LoadImage("C:\\Users\\User\\Desktop\\sum_from_image.png")
+	err := i.LoadImage("C:\\Users\\User\\Desktop\\subtract.png")
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 	}
