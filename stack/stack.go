@@ -43,3 +43,23 @@ func (stack *Stack) IsEmpty() bool {
 		return false
 	}
 }
+
+func (stack *Stack) Cycle() {
+	var last = stack.items[len(stack.items)-1]
+	//fmt.Printf("Last: %d\n", last)
+	for i := len(stack.items) - 1; i > 0; i-- {
+		stack.items[i] = stack.items[i-1]
+		//fmt.Printf("%d) %+v\n", i, stack.items)
+	}
+	stack.items[0] = last
+}
+
+func (stack *Stack) RCycle() {
+	var last = stack.items[0]
+	//fmt.Printf("Last: %d\n", last)
+	for i := 0; i < len(stack.items)-1; i++ {
+		stack.items[i] = stack.items[i+1]
+		//fmt.Printf("%d) %+v\n", i, stack.items)
+	}
+	stack.items[len(stack.items)-1] = last
+}
