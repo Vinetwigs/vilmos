@@ -30,6 +30,8 @@ var (
 	SALMON           pixel.Pixel = pixel.Pixel{R: 255, G: 154, B: 162, A: 255} //#ff9aa2 -> NOT
 	DARK_WHITE       pixel.Pixel = pixel.Pixel{R: 227, G: 227, B: 227, A: 255} //#e3e3e3 -> INPUT ASCII
 	LIGHT_BLACK      pixel.Pixel = pixel.Pixel{R: 75, G: 75, B: 75, A: 255}    //#4b4b4b -> OUTPUT ASCII
+	DARK_GOLD        pixel.Pixel = pixel.Pixel{R: 204, G: 158, B: 6, A: 255}   //#cc9e06 -> POP
+	GOLD             pixel.Pixel = pixel.Pixel{R: 204, G: 158, B: 6, A: 255}   //#ffbd4a -> SWAP
 )
 
 const (
@@ -258,6 +260,22 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		result := Btoi(!Itob(v1))
 		i.stack.Push(result)
+	case DARK_GOLD.String(): //Pops one number, and discardes it
+		_, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+	case GOLD.String():
+		v1, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		v2, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		i.stack.Push(v1)
+		i.stack.Push(v2)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(sum)
