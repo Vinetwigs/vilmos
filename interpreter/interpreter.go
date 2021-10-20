@@ -29,7 +29,7 @@ var (
 	PALE_LAVANDER    pixel.Pixel = pixel.Pixel{R: 225, G: 211, B: 239, A: 255} //#e1d3ef -> NAND
 	SALMON           pixel.Pixel = pixel.Pixel{R: 255, G: 154, B: 162, A: 255} //#ff9aa2 -> NOT
 	DARK_WHITE       pixel.Pixel = pixel.Pixel{R: 227, G: 227, B: 227, A: 255} //#e3e3e3 -> INPUT ASCII
-	LIGHT_BLACK      pixel.Pixel = pixel.Pixel{R: 75, G: 75, B: 75, A: 75}     //#4b4b4b -> OUTPUT ASCII
+	LIGHT_BLACK      pixel.Pixel = pixel.Pixel{R: 75, G: 75, B: 75, A: 255}    //#4b4b4b -> OUTPUT ASCII
 )
 
 const (
