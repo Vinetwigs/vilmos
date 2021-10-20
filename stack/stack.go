@@ -5,7 +5,7 @@ import (
 )
 
 type Stack struct {
-	items []uint8
+	items []int
 }
 
 func NewStack() *Stack {
@@ -13,11 +13,11 @@ func NewStack() *Stack {
 	return stack
 }
 
-func (stack *Stack) Push(val uint8) {
+func (stack *Stack) Push(val int) {
 	stack.items = append(stack.items, val)
 }
 
-func (stack *Stack) Pop() (uint8, error) {
+func (stack *Stack) Pop() (int, error) {
 	if len(stack.items) == 0 {
 		return 0, errors.New("error: stack is empty, cannot pop")
 	}
