@@ -1,6 +1,8 @@
 package stack
 
-import "errors"
+import (
+	"errors"
+)
 
 type Stack struct {
 	items []uint8
@@ -20,8 +22,9 @@ func (stack *Stack) Pop() (uint8, error) {
 		return 0, errors.New("error: stack is empty, cannot pop")
 	}
 
-	item := stack.items[len(stack.items)-1]
-
+	index := len(stack.items) - 1 // Get the index of the top most element.
+	item := stack.items[index]    // Index into the slice and obtain the element.
+	stack.items = stack.items[:index]
 	return item, nil
 }
 
