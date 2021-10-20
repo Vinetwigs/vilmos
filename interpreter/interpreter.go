@@ -34,6 +34,7 @@ var (
 	GOLD             pixel.Pixel = pixel.Pixel{R: 255, G: 189, B: 74, A: 255}  //#ffbd4a -> SWAP
 	SHIMMERING_BLUSH pixel.Pixel = pixel.Pixel{R: 227, G: 127, B: 157, A: 255} //#e37f9d -> CYCLE
 	CHARM_PINK       pixel.Pixel = pixel.Pixel{R: 233, G: 148, B: 174, A: 255} //#e994ae -> RCYCLE
+	SEA_BLUE         pixel.Pixel = pixel.Pixel{R: 0, G: 105, B: 148, A: 255}   //#006994 -> DUPLICATE
 )
 
 const (
@@ -204,6 +205,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		n, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		if n <= 0 {
 			logError(errors.New("error: cannot generate a random number with n <= 0"))
@@ -215,10 +217,12 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		v2, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		result := Itob(v1) && Itob(v2)
 		i.stack.Push(Btoi(result))
@@ -226,10 +230,12 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		v2, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		result := Itob(v1) || Itob(v2)
 		i.stack.Push(Btoi(result))
@@ -237,10 +243,12 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		v2, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		result := Itob(v1) != Itob(v2)
 		i.stack.Push(Btoi(result))
@@ -248,10 +256,12 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		v2, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		result := nand(Itob(v1), Itob(v2))
 		i.stack.Push(Btoi(result))
@@ -259,6 +269,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
+			break
 		}
 		result := Btoi(!Itob(v1))
 		i.stack.Push(result)
@@ -282,6 +293,14 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		i.stack.Cycle()
 	case CHARM_PINK.String():
 		i.stack.RCycle()
+	case SEA_BLUE.String():
+		val, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+			break
+		}
+		i.stack.Push(val)
+		i.stack.Push(val)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(sum)
