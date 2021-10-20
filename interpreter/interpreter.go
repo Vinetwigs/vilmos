@@ -1,12 +1,15 @@
 package interpreter
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
 	"log"
+	"math/rand"
 	"os"
+	"time"
 	pixel "vilmos/pixel"
 	stack "vilmos/stack"
 )
@@ -19,6 +22,7 @@ var (
 	VIOLET    pixel.Pixel = pixel.Pixel{R: 138, G: 43, B: 226, A: 255}  //#8a2be2
 	RED       pixel.Pixel = pixel.Pixel{R: 139, G: 0, B: 0, A: 255}     //#8b0000
 	PEACH     pixel.Pixel = pixel.Pixel{R: 255, G: 218, B: 185, A: 255} //#ffdab9
+	GREEN     pixel.Pixel = pixel.Pixel{R: 0, G: 128, B: 0, A: 255}     //#008000
 )
 
 const (
@@ -38,6 +42,8 @@ type Interpreter struct {
 }
 
 func NewInterpreter() *Interpreter {
+	rand.Seed(time.Now().UnixNano())
+
 	interpreter := new(Interpreter)
 	interpreter.image = nil
 	interpreter._type = INT_TYPE
@@ -139,7 +145,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sub := v1 - v2
 		i.stack.Push(sub)
-	case VIOLET.String():
+	case VIOLET.String(): //Pops two numbers, divides them and pushes the result in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -150,7 +156,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sub := v1 / v2
 		i.stack.Push(sub)
-	case RED.String():
+	case RED.String(): //Pops two numbers, multiplies them and pushes the result in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -161,7 +167,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sub := v1 * v2
 		i.stack.Push(sub)
-	case PEACH.String():
+	case PEACH.String(): //Pops two numbers, and pushes the result of the modulus in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -172,6 +178,17 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sub := v1 % v2
 		i.stack.Push(sub)
+	case GREEN.String(): //Pops one number, and pushes in the stack a random number between [0, n) where n is the number popped
+		n, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		if n <= 0 {
+			logError(errors.New("error: cannot generate a random number with n <= 0"))
+			break
+		}
+		random := rand.Intn(n)
+		i.stack.Push(random)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(sum)
