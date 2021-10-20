@@ -23,7 +23,7 @@ var (
 	RED       pixel.Pixel = pixel.Pixel{R: 139, G: 0, B: 0, A: 255}     //#8b0000 -> MULTIPLICATION
 	PEACH     pixel.Pixel = pixel.Pixel{R: 255, G: 218, B: 185, A: 255} //#ffdab9 -> MODULUS
 	GREEN     pixel.Pixel = pixel.Pixel{R: 0, G: 128, B: 0, A: 255}     //#008000 -> RANDOM
-	BEIGE     pixel.Pixel = pixel.Pixel{R: 236, G: 243, B: 220, A: 255} //#ecf3dc -> OR
+	BEIGE     pixel.Pixel = pixel.Pixel{R: 236, G: 243, B: 220, A: 255} //#ecf3dc -> AND
 )
 
 const (
@@ -190,7 +190,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		random := rand.Intn(n)
 		i.stack.Push(random)
-	case BEIGE.String(): //Pops two numbers, and pushes the result of OR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+	case BEIGE.String(): //Pops two numbers, and pushes the result of AND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
