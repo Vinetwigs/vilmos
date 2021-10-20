@@ -25,6 +25,9 @@ var (
 	GREEN            pixel.Pixel = pixel.Pixel{R: 0, G: 128, B: 0, A: 255}     //#008000 -> RANDOM
 	BEIGE            pixel.Pixel = pixel.Pixel{R: 236, G: 243, B: 220, A: 255} //#ecf3dc -> AND
 	LIGHT_STEEL_BLUE pixel.Pixel = pixel.Pixel{R: 183, G: 198, B: 230, A: 255} //#b7c6e6 -> OR
+	WHITE_CHOCOLATE  pixel.Pixel = pixel.Pixel{R: 245, G: 227, B: 215, A: 255} //#f5e3d7 -> XOR
+	PALE_LAVANDER    pixel.Pixel = pixel.Pixel{R: 225, G: 211, B: 239, A: 255} //#e1d3ef -> NAND
+
 )
 
 const (
@@ -213,6 +216,28 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		result := Itob(v1) || Itob(v2)
 		i.stack.Push(Btoi(result))
+	case WHITE_CHOCOLATE.String(): //Pops two numbers, and pushes the result of XOR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+		v1, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		v2, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		result := Itob(v1) != Itob(v2)
+		i.stack.Push(Btoi(result))
+	case PALE_LAVANDER.String(): //Pops two numbers, and pushes the result of XOR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+		v1, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		v2, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		result := nand(Itob(v1), Itob(v2))
+		i.stack.Push(Btoi(result))
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(sum)
@@ -232,4 +257,12 @@ func Btoi(b bool) int {
 		return 1
 	}
 	return 0
+}
+
+func nand(a bool, b bool) bool {
+	if a == true && b == true {
+		return false
+	} else {
+		return true
+	}
 }
