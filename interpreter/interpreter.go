@@ -14,7 +14,7 @@ import (
 var (
 	WHITE     pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255} //#ffffff
 	BLACK     pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0, A: 255}       //#000000
-	TURQUOISE pixel.Pixel = pixel.Pixel{R: 1, G: 206, B: 209, A: 255}   //#01ced1
+	TURQUOISE pixel.Pixel = pixel.Pixel{R: 0, G: 206, B: 209, A: 255}   //#00ced1
 )
 
 const (
@@ -125,6 +125,9 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 
 		sum := v1 + v2
 		i.stack.Push(sum)
+	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
+		sum := pixel.R + pixel.G + pixel.B
+		i.stack.Push(uint8(sum))
 	}
 }
 
