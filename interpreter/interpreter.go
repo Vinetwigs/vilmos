@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	WHITE pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255} //#ffffff
-	BLACK pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0, A: 255}       //#000000
+	WHITE     pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255} //#ffffff
+	BLACK     pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0, A: 255}       //#000000
+	TURQUOISE pixel.Pixel = pixel.Pixel{R: 1, G: 206, B: 209, A: 255}   //#01ced1
 )
 
 const (
@@ -101,19 +102,29 @@ func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) pixel.Pixel {
 
 func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 	switch pixel.String() {
-	case WHITE.String(): //Gets int from input and pushes it to the stack
+	case WHITE.String(): //Gets value from input as number and pushes it to the stack
 		var val uint8
-		fmt.Scanf("%c", &val)
+		fmt.Scanf("%d\n", &val)
 		i.stack.Push(val)
 	case BLACK.String(): //Pops the top of the stack and outputs it as number
 		val, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
-			break
 		} else {
-			fmt.Printf("%c", val)
-			break
+			fmt.Printf("%d", val)
 		}
+	case TURQUOISE.String(): //Pops two numbers, adds them and pushes the result in the stack
+		v1, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		v2, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+
+		sum := v1 + v2
+		i.stack.Push(sum)
 	}
 }
 
