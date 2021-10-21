@@ -19,3 +19,11 @@ func (p *Pair) GetX() int {
 func (p *Pair) GetY() int {
 	return p.y
 }
+
+func (p *Pair) SetX(val int) {
+	p.x = val
+}
+
+func (p *Pair) SetY(val int) {
+	p.y = val
+}
