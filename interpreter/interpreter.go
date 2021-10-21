@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"time"
+	pair "vilmos/pair"
 	pixel "vilmos/pixel"
 	stack "vilmos/stack"
 )
@@ -38,11 +39,8 @@ var (
 	CAR_OIL          pixel.Pixel = pixel.Pixel{R: 165, G: 165, B: 141, A: 255} //#a5a58d -> REVERSE
 	HAWAII_SEA       pixel.Pixel = pixel.Pixel{R: 183, G: 228, B: 199, A: 255} //#b7e4c7 -> QUIT PROGRAM
 	WINE_RED         pixel.Pixel = pixel.Pixel{R: 155, G: 34, B: 66, A: 255}   //#9B2242 -> OUTPUT ALL STACK
-)
-
-const (
-	INT_TYPE = iota
-	STRING_TYPE
+	MIDNIGHT_PURPLE  pixel.Pixel = pixel.Pixel{R: 46, G: 26, B: 71, A: 255}    //#2e1a47 -> START WHILE LOOP
+	ROYALE_PURPLE    pixel.Pixel = pixel.Pixel{R: 104, G: 71, B: 141, A: 255}  //#68478d -> END WHILE LOOP
 )
 
 var (
@@ -53,7 +51,7 @@ var (
 type Interpreter struct {
 	image image.Image
 	stack stack.Stack
-	_type int
+	pc    pair.Pair
 }
 
 func NewInterpreter() *Interpreter {
@@ -61,24 +59,12 @@ func NewInterpreter() *Interpreter {
 
 	interpreter := new(Interpreter)
 	interpreter.image = nil
-	interpreter._type = INT_TYPE
+	interpreter.pc = *pair.NewPair(0, 0)
 
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 
 	return interpreter
-}
-
-/*
-	0 = INT_TYPE
-	> 0 = STRING_TYPE
-*/
-func (i *Interpreter) SetType(t int) {
-	if t != 0 {
-		i._type = INT_TYPE
-	} else {
-		i._type = STRING_TYPE
-	}
 }
 
 func (i *Interpreter) LoadImage(path string) error {
@@ -104,25 +90,25 @@ func (i *Interpreter) GetImage() image.Image {
 }
 
 func (i *Interpreter) Run() {
-	for y := 0; y < HEIGTH; y++ {
-		for x := 0; x < WIDTH; x++ {
-			i.Step(x, y)
-		}
+	var err error = nil
+	for err == nil {
+		i.Step()
+		err = i.increasePC()
 	}
 }
 
-func (i *Interpreter) Step(x int, y int) bool {
-	pixel := readPixel(i, x, y)
-	processPixel(&pixel, i)
+func (i *Interpreter) Step() bool {
+	pixel := i.readPixel()
+	processPixel(pixel, i)
 	return true
 }
 
-func readPixel(i *Interpreter, x int, y int) pixel.Pixel {
-	return rgbaToPixel(i.image.At(x, y).RGBA())
+func (i *Interpreter) readPixel() *pixel.Pixel {
+	return rgbaToPixel(i.image.At(i.pc.GetX(), i.pc.GetY()).RGBA())
 }
 
-func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) pixel.Pixel {
-	return pixel.Pixel{R: int(r / 257), G: int(g / 257), B: int(b / 257), A: int(a / 257)}
+func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) *pixel.Pixel {
+	return &pixel.Pixel{R: int(r / 257), G: int(g / 257), B: int(b / 257), A: int(a / 257)}
 }
 
 func processPixel(pixel *pixel.Pixel, i *Interpreter) {
@@ -169,7 +155,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		if err != nil {
 			logError(err)
 		}
-		sub := v1 - v2
+		sub := v2 - v1
 		i.stack.Push(sub)
 	case VIOLET.String(): //Pops two numbers, divides them and pushes the result in the stack
 		v1, err := i.stack.Pop()
@@ -180,7 +166,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		if err != nil {
 			logError(err)
 		}
-		sub := v1 / v2
+		sub := v2 / v1
 		i.stack.Push(sub)
 	case RED.String(): //Pops two numbers, multiplies them and pushes the result in the stack
 		v1, err := i.stack.Pop()
@@ -202,7 +188,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		if err != nil {
 			logError(err)
 		}
-		sub := v1 % v2
+		sub := v2 % v1
 		i.stack.Push(sub)
 	case GREEN.String(): //Pops one number, and pushes in the stack a random number between [0, n) where n is the number popped
 		n, err := i.stack.Pop()
@@ -304,13 +290,19 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		i.stack.Push(val)
 		i.stack.Push(val)
-	case CAR_OIL.String():
+	case CAR_OIL.String(): //Reverses the content of the stack
 		i.stack.Reverse()
-	case HAWAII_SEA.String():
+	case HAWAII_SEA.String(): //Exits the program
 		fmt.Printf("\n")
 		os.Exit(1)
-	case WINE_RED.String():
+	case WINE_RED.String(): //Outputs all the content of the stack without popping it
 		i.stack.Output()
+	case MIDNIGHT_PURPLE.String():
+		if i.stack.Peek() == 0 { //exits the loop if top is false
+			jumpForward(i)
+		}
+	case ROYALE_PURPLE.String():
+		jumpBack(i)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(sum)
@@ -318,7 +310,9 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 }
 
 func logError(e error) {
+	fmt.Printf("\n")
 	log.Println("\033[31m" + e.Error() + "\033[0m")
+	os.Exit(2)
 }
 
 func Itob(i int) bool {
@@ -333,9 +327,71 @@ func Btoi(b bool) int {
 }
 
 func nand(a bool, b bool) bool {
-	if a && b {
-		return false
-	} else {
-		return true
+	return !(a && b)
+}
+
+func jumpForward(i *Interpreter) {
+	open := 0
+	for {
+		p := i.readPixel()
+		err := i.increasePC()
+		switch p.String() {
+		case MIDNIGHT_PURPLE.String():
+			open++
+		case ROYALE_PURPLE.String():
+			open--
+			if open == 0 {
+				return
+			}
+		}
+		if err != nil {
+			logError(errors.New("error: missing end loop"))
+		}
 	}
+}
+
+func jumpBack(i *Interpreter) {
+	close := 0
+	for {
+		p := i.readPixel()
+		err := i.decreasePC()
+		switch p.String() {
+		case MIDNIGHT_PURPLE.String():
+			close--
+			if close == 0 {
+				return
+			}
+		case ROYALE_PURPLE.String():
+			close++
+		}
+		if err != nil {
+			logError(errors.New("error: missing start loop"))
+		}
+	}
+}
+
+func (i *Interpreter) increasePC() error {
+	if i.pc.GetX()+1 < WIDTH {
+		i.pc.SetX(i.pc.GetX() + 1)
+		return nil
+	}
+	if i.pc.GetY()+1 < HEIGTH {
+		i.pc.SetY(i.pc.GetY() + 1)
+		i.pc.SetX(0)
+		return nil
+	}
+	return errors.New("error: out of bounds")
+}
+
+func (i *Interpreter) decreasePC() error {
+	if i.pc.GetX()-1 >= 0 {
+		i.pc.SetX(i.pc.GetX() - 1)
+		return nil
+	}
+	if i.pc.GetY()-1 >= 0 {
+		i.pc.SetY(i.pc.GetY() - 1)
+		i.pc.SetX(WIDTH - 1)
+		return nil
+	}
+	return errors.New("error: out of bounds")
 }
