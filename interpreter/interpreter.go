@@ -35,6 +35,9 @@ var (
 	SHIMMERING_BLUSH pixel.Pixel = pixel.Pixel{R: 227, G: 127, B: 157, A: 255} //#e37f9d -> CYCLE
 	CHARM_PINK       pixel.Pixel = pixel.Pixel{R: 233, G: 148, B: 174, A: 255} //#e994ae -> RCYCLE
 	SEA_BLUE         pixel.Pixel = pixel.Pixel{R: 0, G: 105, B: 148, A: 255}   //#006994 -> DUPLICATE
+	CAR_OIL          pixel.Pixel = pixel.Pixel{R: 165, G: 165, B: 141, A: 255} //#a5a58d -> REVERSE
+	HAWAII_SEA       pixel.Pixel = pixel.Pixel{R: 183, G: 228, B: 199, A: 255} //#b7e4c7 -> QUIT PROGRAM
+	WINE_RED         pixel.Pixel = pixel.Pixel{R: 155, G: 34, B: 66, A: 255}   //#9B2242 -> OUTPUT ALL STACK
 )
 
 const (
@@ -301,6 +304,12 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		i.stack.Push(val)
 		i.stack.Push(val)
+	case CAR_OIL.String():
+		i.stack.Reverse()
+	case HAWAII_SEA.String():
+		os.Exit(1)
+	case WINE_RED.String():
+		i.stack.Output()
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(sum)
