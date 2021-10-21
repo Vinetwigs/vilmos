@@ -307,6 +307,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 	case CAR_OIL.String():
 		i.stack.Reverse()
 	case HAWAII_SEA.String():
+		fmt.Printf("\n")
 		os.Exit(1)
 	case WINE_RED.String():
 		i.stack.Output()
