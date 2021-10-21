@@ -2,6 +2,7 @@ package stack
 
 import (
 	"errors"
+	"fmt"
 )
 
 type Stack struct {
@@ -17,6 +18,10 @@ func (stack *Stack) Push(val int) {
 	stack.items = append(stack.items, val)
 
 	//fmt.Printf("Stack (push) -> %+v\n", stack.items)
+}
+
+func (stack *Stack) Peek() int {
+	return stack.items[len(stack.items)-1]
 }
 
 func (stack *Stack) Pop() (int, error) {
@@ -62,4 +67,30 @@ func (stack *Stack) RCycle() {
 		//fmt.Printf("%d) %+v\n", i, stack.items)
 	}
 	stack.items[len(stack.items)-1] = last
+}
+
+func insertBottom(x int, s *Stack) {
+	if s.IsEmpty() {
+		s.Push(x)
+	} else {
+		y := s.Peek()
+		s.Pop()
+		insertBottom(x, s)
+		s.Push(y)
+	}
+}
+
+func (stack *Stack) Reverse() {
+	if stack.Size() > 0 {
+		x := stack.Peek()
+		stack.Pop()
+		stack.Reverse()
+		insertBottom(x, stack)
+	}
+}
+
+func (stack *Stack) Output() {
+	for i := len(stack.items) - 1; i >= 0; i-- {
+		fmt.Printf("%d", stack.items[i])
+	}
 }
