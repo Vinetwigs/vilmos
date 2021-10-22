@@ -34,7 +34,7 @@ func main() {
 		Name:    "vilmos",
 		Version: version,
 		Authors: []*cli.Author{
-			&cli.Author{
+			{
 				Name:  "Vinetwigs",
 				Email: "github.com/Vinetwigs",
 			},
@@ -51,9 +51,8 @@ func main() {
 			&cli.StringFlag{
 				Name:        "config",
 				Aliases:     []string{"conf", "c"},
-				Usage:       "set config file path for custom color codes",
+				Usage:       "load configuration from `FILE_PATH` for custom color codes",
 				Value:       "",
-				DefaultText: "not set",
 				Destination: &config_path,
 			},
 		},
@@ -61,7 +60,7 @@ func main() {
 			var file_path string
 			if c.NArg() > 0 {
 				file_path = c.Args().Get(0)
-				i := inter.NewInterpreter(debug)
+				i := inter.NewInterpreter(debug, config_path)
 
 				err := i.LoadImage(file_path)
 				if err != nil {
