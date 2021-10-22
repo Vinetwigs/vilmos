@@ -77,9 +77,11 @@ func NewInterpreter(debug bool, configs string) *Interpreter {
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	interpreter.isDebug = debug
 
-	err := loadConfigs(configs)
-	if err != nil {
-		logError(err)
+	if configs != "" {
+		err := loadConfigs(configs)
+		if err != nil {
+			logError(err)
+		}
 	}
 	return interpreter
 }
