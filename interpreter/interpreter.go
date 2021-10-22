@@ -24,6 +24,7 @@ var (
 	ErrorDecodeImage     = errors.New("error: unable to decode specified image")
 	ErrorOutOfBounds     = errors.New("error: out of bounds")
 	ErrorInvalidHex      = errors.New("error: invalid hex format")
+	ErrorLoadConfig      = errors.New("error: unable to load config file")
 )
 
 var (
@@ -66,7 +67,7 @@ type Interpreter struct {
 	isDebug bool
 }
 
-func NewInterpreter(debug bool) *Interpreter {
+func NewInterpreter(debug bool, configs string) *Interpreter {
 	rand.Seed(time.Now().UnixNano())
 
 	interpreter := new(Interpreter)
@@ -76,6 +77,7 @@ func NewInterpreter(debug bool) *Interpreter {
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 	interpreter.isDebug = debug
+	loadConfigs(configs)
 	return interpreter
 }
 
@@ -429,4 +431,8 @@ func stringToHex(s string) (c color.RGBA, err error) {
 		err = ErrorInvalidHex
 	}
 	return
+}
+
+func loadConfigs(path string) error {
+	return nil
 }
