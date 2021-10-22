@@ -5,6 +5,10 @@ import (
 	"fmt"
 )
 
+var (
+	ErrorPop = errors.New("error: trying to pop an empty stack")
+)
+
 type Stack struct {
 	items []int
 }
@@ -26,7 +30,7 @@ func (stack *Stack) Peek() int {
 
 func (stack *Stack) Pop() (int, error) {
 	if len(stack.items) == 0 {
-		return 0, errors.New("error: stack is empty, cannot pop")
+		return 0, ErrorPop
 	}
 
 	index := len(stack.items) - 1 // Get the index of the top most element.
