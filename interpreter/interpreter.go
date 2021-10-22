@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"image/color"
-	"image/jpeg"
 	"image/png"
 	"log"
 	"math/rand"
@@ -15,6 +13,8 @@ import (
 	pair "vilmos/pair"
 	pixel "vilmos/pixel"
 	stack "vilmos/stack"
+
+	"gopkg.in/ini.v1"
 )
 
 var (
@@ -27,33 +27,33 @@ var (
 	ErrorLoadConfig      = errors.New("error: unable to load config file")
 )
 
-var (
-	WHITE            pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255} //#ffffff -> INPUT INT
-	BLACK            pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0}       //#000000 -> OUTPUT INT
-	TURQUOISE        pixel.Pixel = pixel.Pixel{R: 0, G: 206, B: 209}   //#00ced1 -> SUM
-	ORANGE           pixel.Pixel = pixel.Pixel{R: 255, G: 165, B: 0}   //#ffa500 -> SUBTRACTION
-	VIOLET           pixel.Pixel = pixel.Pixel{R: 138, G: 43, B: 226}  //#8a2be2 -> DIVISION
-	RED              pixel.Pixel = pixel.Pixel{R: 139, G: 0, B: 0}     //#8b0000 -> MULTIPLICATION
-	PEACH            pixel.Pixel = pixel.Pixel{R: 255, G: 218, B: 185} //#ffdab9 -> MODULUS
-	GREEN            pixel.Pixel = pixel.Pixel{R: 0, G: 128, B: 0}     //#008000 -> RANDOM
-	BEIGE            pixel.Pixel = pixel.Pixel{R: 236, G: 243, B: 220} //#ecf3dc -> AND
-	LIGHT_STEEL_BLUE pixel.Pixel = pixel.Pixel{R: 183, G: 198, B: 230} //#b7c6e6 -> OR
-	WHITE_CHOCOLATE  pixel.Pixel = pixel.Pixel{R: 245, G: 227, B: 215} //#f5e3d7 -> XOR
-	PALE_LAVANDER    pixel.Pixel = pixel.Pixel{R: 225, G: 211, B: 239} //#e1d3ef -> NAND
-	SALMON           pixel.Pixel = pixel.Pixel{R: 255, G: 154, B: 162} //#ff9aa2 -> NOT
-	DARK_WHITE       pixel.Pixel = pixel.Pixel{R: 227, G: 227, B: 227} //#e3e3e3 -> INPUT ASCII
-	LIGHT_BLACK      pixel.Pixel = pixel.Pixel{R: 75, G: 75, B: 75}    //#4b4b4b -> OUTPUT ASCII
-	DARK_GOLD        pixel.Pixel = pixel.Pixel{R: 204, G: 158, B: 6}   //#cc9e06 -> POP
-	GOLD             pixel.Pixel = pixel.Pixel{R: 255, G: 189, B: 74}  //#ffbd4a -> SWAP
-	SHIMMERING_BLUSH pixel.Pixel = pixel.Pixel{R: 227, G: 127, B: 157} //#e37f9d -> CYCLE
-	CHARM_PINK       pixel.Pixel = pixel.Pixel{R: 233, G: 148, B: 174} //#e994ae -> RCYCLE
-	SEA_BLUE         pixel.Pixel = pixel.Pixel{R: 0, G: 105, B: 148}   //#006994 -> DUPLICATE
-	CAR_OIL          pixel.Pixel = pixel.Pixel{R: 165, G: 165, B: 141} //#a5a58d -> REVERSE
-	HAWAII_SEA       pixel.Pixel = pixel.Pixel{R: 183, G: 228, B: 199} //#b7e4c7 -> QUIT PROGRAM
-	WINE_RED         pixel.Pixel = pixel.Pixel{R: 155, G: 34, B: 66}   //#9B2242 -> OUTPUT ALL STACK
-	MIDNIGHT_PURPLE  pixel.Pixel = pixel.Pixel{R: 46, G: 26, B: 71}    //#2e1a47 -> START WHILE LOOP
-	ROYALE_PURPLE    pixel.Pixel = pixel.Pixel{R: 104, G: 71, B: 141}  //#68478d -> END WHILE LOOP
-)
+var OPERATIONS = map[string]*pixel.Pixel{
+	"INPUT_INT":    {R: 255, G: 255, B: 255}, //#ffffff -> INPUT INT
+	"OUTPUT_INT":   {R: 0, G: 0, B: 0},       //#000000 -> OUTPUT INT
+	"SUM":          {R: 0, G: 206, B: 209},   //#00ced1 -> SUM
+	"SUB":          {R: 255, G: 165, B: 0},   //#ffa500 -> SUBTRACTION
+	"DIV":          {R: 138, G: 43, B: 226},  //#8a2be2 -> DIVISION
+	"MUL":          {R: 139, G: 0, B: 0},     //#8b0000 -> MULTIPLICATION
+	"MOD":          {R: 255, G: 218, B: 185}, //#ffdab9 -> MODULUS
+	"RND":          {R: 0, G: 128, B: 0},     //#008000 -> RANDOM
+	"AND":          {R: 236, G: 243, B: 220}, //#ecf3dc -> AND
+	"OR":           {R: 183, G: 198, B: 230}, //#b7c6e6 -> OR
+	"XOR":          {R: 245, G: 227, B: 215}, //#f5e3d7 -> XOR
+	"NAND":         {R: 225, G: 211, B: 239}, //#e1d3ef -> NAND
+	"NOT":          {R: 255, G: 154, B: 162}, //#ff9aa2 -> NOT
+	"INPUT_ASCII":  {R: 227, G: 227, B: 227}, //#e3e3e3 -> INPUT ASCII
+	"OUTPUT_ASCII": {R: 75, G: 75, B: 75},    //#4b4b4b -> OUTPUT ASCII
+	"POP":          {R: 204, G: 158, B: 6},   //#cc9e06 -> POP
+	"SWAP":         {R: 255, G: 189, B: 74},  //#ffbd4a -> SWAP
+	"CYCLE":        {R: 227, G: 127, B: 157}, //#e37f9d -> CYCLE
+	"RCYCLE":       {R: 233, G: 148, B: 174}, //#e994ae -> RCYCLE
+	"DUP":          {R: 0, G: 105, B: 148},   //#006994 -> DUPLICATE
+	"REVERSE":      {R: 165, G: 165, B: 141}, //#a5a58d -> REVERSE
+	"QUIT":         {R: 183, G: 228, B: 199}, //#b7e4c7 -> QUIT PROGRAM
+	"OUTPUT":       {R: 155, G: 34, B: 66},   //#9B2242 -> OUTPUT ALL STACK
+	"WHILE":        {R: 46, G: 26, B: 71},    //#2e1a47 -> START WHILE LOOP
+	"WHILE_END":    {R: 104, G: 71, B: 141},  //#68478d -> END WHILE LOOP
+}
 
 var (
 	WIDTH  int = 0
@@ -75,9 +75,12 @@ func NewInterpreter(debug bool, configs string) *Interpreter {
 	interpreter.pc = *pair.NewPair(0, 0)
 
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
-	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 	interpreter.isDebug = debug
-	loadConfigs(configs)
+
+	err := loadConfigs(configs)
+	if err != nil {
+		logError(err)
+	}
 	return interpreter
 }
 
@@ -133,29 +136,29 @@ func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) *pixel.Pixel {
 
 func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 	switch pixel.String() {
-	case WHITE.String(): //Gets value from input as number and pushes it to the stack
+	case OPERATIONS["INPUT_INT"].String(): //Gets value from input as number and pushes it to the stack
 		var val int
 		fmt.Scanf("%d\n", &val)
 		i.stack.Push(val)
-	case DARK_WHITE.String(): //Gets value from input as ASCII char and pushes it to the stack
+	case OPERATIONS["INPUT_ASCII"].String(): //Gets value from input as ASCII char and pushes it to the stack
 		var val rune
 		fmt.Scanf("%c\n", &val)
 		i.stack.Push(int(val))
-	case BLACK.String(): //Pops the top of the stack and outputs it as number
+	case OPERATIONS["OUTPUT_INT"].String(): //Pops the top of the stack and outputs it as number
 		val, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
 		} else {
 			fmt.Printf("%d", val)
 		}
-	case LIGHT_BLACK.String(): //Pops the top of the stack and outputs it as ASCII char
+	case OPERATIONS["OUTPUT_ASCII"].String(): //Pops the top of the stack and outputs it as ASCII char
 		val, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
 		} else {
 			fmt.Printf("%c", val)
 		}
-	case TURQUOISE.String(): //Pops two numbers, adds them and pushes the result in the stack
+	case OPERATIONS["SUM"].String(): //Pops two numbers, adds them and pushes the result in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -166,7 +169,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sum := v1 + v2
 		i.stack.Push(sum)
-	case ORANGE.String(): //Pops two numbers, subtracts them and pushes the result in the stack
+	case OPERATIONS["SUB"].String(): //Pops two numbers, subtracts them and pushes the result in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -177,7 +180,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sub := v2 - v1
 		i.stack.Push(sub)
-	case VIOLET.String(): //Pops two numbers, divides them and pushes the result in the stack
+	case OPERATIONS["DIV"].String(): //Pops two numbers, divides them and pushes the result in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -188,7 +191,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sub := v2 / v1
 		i.stack.Push(sub)
-	case RED.String(): //Pops two numbers, multiplies them and pushes the result in the stack
+	case OPERATIONS["MUL"].String(): //Pops two numbers, multiplies them and pushes the result in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -199,7 +202,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sub := v1 * v2
 		i.stack.Push(sub)
-	case PEACH.String(): //Pops two numbers, and pushes the result of the modulus in the stack
+	case OPERATIONS["MOD"].String(): //Pops two numbers, and pushes the result of the modulus in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -210,7 +213,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sub := v2 % v1
 		i.stack.Push(sub)
-	case GREEN.String(): //Pops one number, and pushes in the stack a random number between [0, n) where n is the number popped
+	case OPERATIONS["RND"].String(): //Pops one number, and pushes in the stack a random number between [0, n) where n is the number popped
 		n, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -222,7 +225,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		random := rand.Intn(n)
 		i.stack.Push(random)
-	case BEIGE.String(): //Pops two numbers, and pushes the result of AND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+	case OPERATIONS["AND"].String(): //Pops two numbers, and pushes the result of AND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -235,7 +238,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		result := Itob(v1) && Itob(v2)
 		i.stack.Push(Btoi(result))
-	case LIGHT_STEEL_BLUE.String(): //Pops two numbers, and pushes the result of OR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+	case OPERATIONS["OR"].String(): //Pops two numbers, and pushes the result of OR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -248,7 +251,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		result := Itob(v1) || Itob(v2)
 		i.stack.Push(Btoi(result))
-	case WHITE_CHOCOLATE.String(): //Pops two numbers, and pushes the result of XOR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+	case OPERATIONS["XOR"].String(): //Pops two numbers, and pushes the result of XOR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -261,7 +264,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		result := Itob(v1) != Itob(v2)
 		i.stack.Push(Btoi(result))
-	case PALE_LAVANDER.String(): //Pops two numbers, and pushes the result of NAND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+	case OPERATIONS["NAND"].String(): //Pops two numbers, and pushes the result of NAND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -274,7 +277,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		result := nand(Itob(v1), Itob(v2))
 		i.stack.Push(Btoi(result))
-	case SALMON.String(): //Pops one number, and pushes the result of NOT [0 is false, anything else is true] [pushes 1 if true or 0 is false]
+	case OPERATIONS["NOT"].String(): //Pops one number, and pushes the result of NOT [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -282,12 +285,12 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		result := Btoi(!Itob(v1))
 		i.stack.Push(result)
-	case DARK_GOLD.String(): //Pops one number, and discardes it
+	case OPERATIONS["POP"].String(): //Pops one number, and discardes it
 		_, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
 		}
-	case GOLD.String(): //Swaps the top two items in the stack
+	case OPERATIONS["SWAP"].String(): //Swaps the top two items in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -298,11 +301,11 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		i.stack.Push(v1)
 		i.stack.Push(v2)
-	case SHIMMERING_BLUSH.String(): //Cycles clockwise the stack
+	case OPERATIONS["CYCLE"].String(): //Cycles clockwise the stack
 		i.stack.Cycle()
-	case CHARM_PINK.String(): //Cycles anti-clockwise the stack
+	case OPERATIONS["RCYCLE"].String(): //Cycles anti-clockwise the stack
 		i.stack.RCycle()
-	case SEA_BLUE.String(): //Duplicates the top of the stack
+	case OPERATIONS["DUP"].String(): //Duplicates the top of the stack
 		val, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -310,18 +313,18 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		i.stack.Push(val)
 		i.stack.Push(val)
-	case CAR_OIL.String(): //Reverses the content of the stack
+	case OPERATIONS["REVERSE"].String(): //Reverses the content of the stack
 		i.stack.Reverse()
-	case HAWAII_SEA.String(): //Exits the program
+	case OPERATIONS["QUIT"].String(): //Exits the program
 		fmt.Printf("\n")
 		os.Exit(1)
-	case WINE_RED.String(): //Outputs all the content of the stack without popping it
+	case OPERATIONS["OUTPUT"].String(): //Outputs all the content of the stack without popping it
 		i.stack.Output()
-	case MIDNIGHT_PURPLE.String():
+	case OPERATIONS["WHILE"].String():
 		if i.stack.Peek() == 0 { //exits the loop if top is false
 			jumpForward(i)
 		}
-	case ROYALE_PURPLE.String():
+	case OPERATIONS["WHILE_END"].String():
 		jumpBack(i)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
@@ -356,9 +359,9 @@ func jumpForward(i *Interpreter) {
 		p := i.readPixel()
 		err := i.increasePC()
 		switch p.String() {
-		case MIDNIGHT_PURPLE.String():
+		case OPERATIONS["WHILE"].String():
 			open++
-		case ROYALE_PURPLE.String():
+		case OPERATIONS["WHILE_END"].String():
 			open--
 			if open == 0 {
 				return
@@ -376,12 +379,12 @@ func jumpBack(i *Interpreter) {
 		p := i.readPixel()
 		err := i.decreasePC()
 		switch p.String() {
-		case MIDNIGHT_PURPLE.String():
+		case OPERATIONS["WHILE"].String():
 			close--
 			if close == 0 {
 				return
 			}
-		case ROYALE_PURPLE.String():
+		case OPERATIONS["WHILE_END"].String():
 			close++
 		}
 		if err != nil {
@@ -416,23 +419,45 @@ func (i *Interpreter) decreasePC() error {
 	return ErrorOutOfBounds
 }
 
-func stringToHex(s string) (c color.RGBA, err error) {
-	c.A = 0xff
+func hexToPixel(s string) (p *pixel.Pixel, err error) {
+	var r, g, b int
 	switch len(s) {
-	case 7:
-		_, err = fmt.Sscanf(s, "#%02x%02x%02x", &c.R, &c.G, &c.B)
-	case 4:
-		_, err = fmt.Sscanf(s, "#%1x%1x%1x", &c.R, &c.G, &c.B)
+	case 6:
+		_, err = fmt.Sscanf(s, "%2x%2x%2x", &r, &g, &b)
+		if err != nil {
+			return nil, ErrorInvalidHex
+		}
+		return &pixel.Pixel{R: r, G: g, B: b}, nil
+	case 3:
+		_, err = fmt.Sscanf(s, "%1x%1x%1x", &r, &g, &b)
+		if err != nil {
+			return nil, ErrorInvalidHex
+		}
 		// Double the hex digits:
-		c.R *= 17
-		c.G *= 17
-		c.B *= 17
+		r *= 17
+		g *= 17
+		b *= 17
+		return &pixel.Pixel{R: r, G: g, B: b}, nil
 	default:
 		err = ErrorInvalidHex
+		return nil, err
 	}
-	return
 }
 
 func loadConfigs(path string) error {
-	return nil
+	cfg, err := ini.Load(path)
+	if err != nil {
+		return ErrorLoadConfig
+	}
+	for op := range OPERATIONS {
+		value := cfg.Section("Colors").Key(op).String()
+		if len(value) != 0 {
+			new_px, err := hexToPixel(value)
+			if err != nil {
+				return ErrorInvalidHex
+			}
+			OPERATIONS[op] = new_px
+		}
+	}
+	return err
 }
