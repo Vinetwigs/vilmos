@@ -16,31 +16,31 @@ import (
 )
 
 var (
-	WHITE            pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255, A: 255} //#ffffff -> INPUT INT
-	BLACK            pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0, A: 255}       //#000000 -> OUTPUT INT
-	TURQUOISE        pixel.Pixel = pixel.Pixel{R: 0, G: 206, B: 209, A: 255}   //#00ced1 -> SUM
-	ORANGE           pixel.Pixel = pixel.Pixel{R: 255, G: 165, B: 0, A: 255}   //#ffa500 -> SUBTRACTION
-	VIOLET           pixel.Pixel = pixel.Pixel{R: 138, G: 43, B: 226, A: 255}  //#8a2be2 -> DIVISION
-	RED              pixel.Pixel = pixel.Pixel{R: 139, G: 0, B: 0, A: 255}     //#8b0000 -> MULTIPLICATION
-	PEACH            pixel.Pixel = pixel.Pixel{R: 255, G: 218, B: 185, A: 255} //#ffdab9 -> MODULUS
-	GREEN            pixel.Pixel = pixel.Pixel{R: 0, G: 128, B: 0, A: 255}     //#008000 -> RANDOM
-	BEIGE            pixel.Pixel = pixel.Pixel{R: 236, G: 243, B: 220, A: 255} //#ecf3dc -> AND
-	LIGHT_STEEL_BLUE pixel.Pixel = pixel.Pixel{R: 183, G: 198, B: 230, A: 255} //#b7c6e6 -> OR
-	WHITE_CHOCOLATE  pixel.Pixel = pixel.Pixel{R: 245, G: 227, B: 215, A: 255} //#f5e3d7 -> XOR
-	PALE_LAVANDER    pixel.Pixel = pixel.Pixel{R: 225, G: 211, B: 239, A: 255} //#e1d3ef -> NAND
-	SALMON           pixel.Pixel = pixel.Pixel{R: 255, G: 154, B: 162, A: 255} //#ff9aa2 -> NOT
-	DARK_WHITE       pixel.Pixel = pixel.Pixel{R: 227, G: 227, B: 227, A: 255} //#e3e3e3 -> INPUT ASCII
-	LIGHT_BLACK      pixel.Pixel = pixel.Pixel{R: 75, G: 75, B: 75, A: 255}    //#4b4b4b -> OUTPUT ASCII
-	DARK_GOLD        pixel.Pixel = pixel.Pixel{R: 204, G: 158, B: 6, A: 255}   //#cc9e06 -> POP
-	GOLD             pixel.Pixel = pixel.Pixel{R: 255, G: 189, B: 74, A: 255}  //#ffbd4a -> SWAP
-	SHIMMERING_BLUSH pixel.Pixel = pixel.Pixel{R: 227, G: 127, B: 157, A: 255} //#e37f9d -> CYCLE
-	CHARM_PINK       pixel.Pixel = pixel.Pixel{R: 233, G: 148, B: 174, A: 255} //#e994ae -> RCYCLE
-	SEA_BLUE         pixel.Pixel = pixel.Pixel{R: 0, G: 105, B: 148, A: 255}   //#006994 -> DUPLICATE
-	CAR_OIL          pixel.Pixel = pixel.Pixel{R: 165, G: 165, B: 141, A: 255} //#a5a58d -> REVERSE
-	HAWAII_SEA       pixel.Pixel = pixel.Pixel{R: 183, G: 228, B: 199, A: 255} //#b7e4c7 -> QUIT PROGRAM
-	WINE_RED         pixel.Pixel = pixel.Pixel{R: 155, G: 34, B: 66, A: 255}   //#9B2242 -> OUTPUT ALL STACK
-	MIDNIGHT_PURPLE  pixel.Pixel = pixel.Pixel{R: 46, G: 26, B: 71, A: 255}    //#2e1a47 -> START WHILE LOOP
-	ROYALE_PURPLE    pixel.Pixel = pixel.Pixel{R: 104, G: 71, B: 141, A: 255}  //#68478d -> END WHILE LOOP
+	WHITE            pixel.Pixel = pixel.Pixel{R: 255, G: 255, B: 255} //#ffffff -> INPUT INT
+	BLACK            pixel.Pixel = pixel.Pixel{R: 0, G: 0, B: 0}       //#000000 -> OUTPUT INT
+	TURQUOISE        pixel.Pixel = pixel.Pixel{R: 0, G: 206, B: 209}   //#00ced1 -> SUM
+	ORANGE           pixel.Pixel = pixel.Pixel{R: 255, G: 165, B: 0}   //#ffa500 -> SUBTRACTION
+	VIOLET           pixel.Pixel = pixel.Pixel{R: 138, G: 43, B: 226}  //#8a2be2 -> DIVISION
+	RED              pixel.Pixel = pixel.Pixel{R: 139, G: 0, B: 0}     //#8b0000 -> MULTIPLICATION
+	PEACH            pixel.Pixel = pixel.Pixel{R: 255, G: 218, B: 185} //#ffdab9 -> MODULUS
+	GREEN            pixel.Pixel = pixel.Pixel{R: 0, G: 128, B: 0}     //#008000 -> RANDOM
+	BEIGE            pixel.Pixel = pixel.Pixel{R: 236, G: 243, B: 220} //#ecf3dc -> AND
+	LIGHT_STEEL_BLUE pixel.Pixel = pixel.Pixel{R: 183, G: 198, B: 230} //#b7c6e6 -> OR
+	WHITE_CHOCOLATE  pixel.Pixel = pixel.Pixel{R: 245, G: 227, B: 215} //#f5e3d7 -> XOR
+	PALE_LAVANDER    pixel.Pixel = pixel.Pixel{R: 225, G: 211, B: 239} //#e1d3ef -> NAND
+	SALMON           pixel.Pixel = pixel.Pixel{R: 255, G: 154, B: 162} //#ff9aa2 -> NOT
+	DARK_WHITE       pixel.Pixel = pixel.Pixel{R: 227, G: 227, B: 227} //#e3e3e3 -> INPUT ASCII
+	LIGHT_BLACK      pixel.Pixel = pixel.Pixel{R: 75, G: 75, B: 75}    //#4b4b4b -> OUTPUT ASCII
+	DARK_GOLD        pixel.Pixel = pixel.Pixel{R: 204, G: 158, B: 6}   //#cc9e06 -> POP
+	GOLD             pixel.Pixel = pixel.Pixel{R: 255, G: 189, B: 74}  //#ffbd4a -> SWAP
+	SHIMMERING_BLUSH pixel.Pixel = pixel.Pixel{R: 227, G: 127, B: 157} //#e37f9d -> CYCLE
+	CHARM_PINK       pixel.Pixel = pixel.Pixel{R: 233, G: 148, B: 174} //#e994ae -> RCYCLE
+	SEA_BLUE         pixel.Pixel = pixel.Pixel{R: 0, G: 105, B: 148}   //#006994 -> DUPLICATE
+	CAR_OIL          pixel.Pixel = pixel.Pixel{R: 165, G: 165, B: 141} //#a5a58d -> REVERSE
+	HAWAII_SEA       pixel.Pixel = pixel.Pixel{R: 183, G: 228, B: 199} //#b7e4c7 -> QUIT PROGRAM
+	WINE_RED         pixel.Pixel = pixel.Pixel{R: 155, G: 34, B: 66}   //#9B2242 -> OUTPUT ALL STACK
+	MIDNIGHT_PURPLE  pixel.Pixel = pixel.Pixel{R: 46, G: 26, B: 71}    //#2e1a47 -> START WHILE LOOP
+	ROYALE_PURPLE    pixel.Pixel = pixel.Pixel{R: 104, G: 71, B: 141}  //#68478d -> END WHILE LOOP
 )
 
 var (
@@ -108,7 +108,7 @@ func (i *Interpreter) readPixel() *pixel.Pixel {
 }
 
 func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) *pixel.Pixel {
-	return &pixel.Pixel{R: int(r / 257), G: int(g / 257), B: int(b / 257), A: int(a / 257)}
+	return &pixel.Pixel{R: int(r / 257), G: int(g / 257), B: int(b / 257)}
 }
 
 func processPixel(pixel *pixel.Pixel, i *Interpreter) {
