@@ -10,9 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-	pair "vilmos/pair"
-	pixel "vilmos/pixel"
-	stack "vilmos/stack"
+	"vilmos/pixel"
+	"vilmos/stack"
 
 	"gopkg.in/ini.v1"
 )
@@ -55,15 +54,12 @@ var OPERATIONS = map[string]*pixel.Pixel{
 	"WHILE_END":    {R: 104, G: 71, B: 141},  //#68478d -> END WHILE LOOP
 }
 
-var (
-	WIDTH  int = 0
-	HEIGTH int = 0
-)
-
 type Interpreter struct {
 	image   image.Image
-	stack   stack.Stack
-	pc      pair.Pair
+	stack   *stack.Stack
+	pc      image.Point
+	width   int
+	height  int
 	isDebug bool
 }
 
@@ -72,8 +68,8 @@ func NewInterpreter(debug bool, configs string) *Interpreter {
 
 	interpreter := new(Interpreter)
 	interpreter.image = nil
-	interpreter.pc = *pair.NewPair(0, 0)
-
+	interpreter.pc = image.Point{X: 0, Y: 0}
+	interpreter.stack = stack.NewStack()
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	interpreter.isDebug = debug
 
@@ -105,7 +101,7 @@ func (i *Interpreter) LoadImage(path string) error {
 	} else {
 		i.image = image
 
-		WIDTH, HEIGTH = i.image.Bounds().Max.X, i.image.Bounds().Max.Y
+		i.width, i.height = i.image.Bounds().Max.X, i.image.Bounds().Max.Y
 		return nil
 	}
 }
@@ -129,11 +125,11 @@ func (i *Interpreter) Step() bool {
 }
 
 func (i *Interpreter) readPixel() *pixel.Pixel {
-	return rgbaToPixel(i.image.At(i.pc.GetX(), i.pc.GetY()).RGBA())
+	return rgbaToPixel(i.image.At(i.pc.X, i.pc.Y).RGBA())
 }
 
 func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) *pixel.Pixel {
-	return &pixel.Pixel{R: int(r / 257), G: int(g / 257), B: int(b / 257)}
+	return &pixel.Pixel{R: uint8(r / 257), G: uint8(g / 257), B: uint8(b / 257)}
 }
 
 func processPixel(pixel *pixel.Pixel, i *Interpreter) {
@@ -330,7 +326,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		jumpBack(i)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
-		i.stack.Push(sum)
+		i.stack.Push(int(sum))
 	}
 }
 
@@ -396,26 +392,26 @@ func jumpBack(i *Interpreter) {
 }
 
 func (i *Interpreter) increasePC() error {
-	if i.pc.GetX()+1 < WIDTH {
-		i.pc.SetX(i.pc.GetX() + 1)
+	if i.pc.X+1 < i.width {
+		i.pc.X = i.pc.X + 1
 		return nil
 	}
-	if i.pc.GetY()+1 < HEIGTH {
-		i.pc.SetY(i.pc.GetY() + 1)
-		i.pc.SetX(0)
+	if i.pc.Y+1 < i.height {
+		i.pc.Y = i.pc.Y + 1
+		i.pc.X = 0
 		return nil
 	}
 	return ErrorOutOfBounds
 }
 
 func (i *Interpreter) decreasePC() error {
-	if i.pc.GetX()-1 >= 0 {
-		i.pc.SetX(i.pc.GetX() - 1)
+	if i.pc.X-1 >= 0 {
+		i.pc.X = i.pc.X - 1
 		return nil
 	}
-	if i.pc.GetY()-1 >= 0 {
-		i.pc.SetY(i.pc.GetY() - 1)
-		i.pc.SetX(WIDTH - 1)
+	if i.pc.Y-1 >= 0 {
+		i.pc.Y = i.pc.Y - 1
+		i.pc.X = i.width - 1
 		return nil
 	}
 	return ErrorOutOfBounds
@@ -429,7 +425,7 @@ func hexToPixel(s string) (p *pixel.Pixel, err error) {
 		if err != nil {
 			return nil, ErrorInvalidHex
 		}
-		return &pixel.Pixel{R: r, G: g, B: b}, nil
+		return &pixel.Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
 	case 3:
 		_, err = fmt.Sscanf(s, "%1x%1x%1x", &r, &g, &b)
 		if err != nil {
@@ -439,7 +435,7 @@ func hexToPixel(s string) (p *pixel.Pixel, err error) {
 		r *= 17
 		g *= 17
 		b *= 17
-		return &pixel.Pixel{R: r, G: g, B: b}, nil
+		return &pixel.Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
 	default:
 		err = ErrorInvalidHex
 		return nil, err

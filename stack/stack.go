@@ -46,50 +46,29 @@ func (stack *Stack) Size() int {
 }
 
 func (stack *Stack) IsEmpty() bool {
-	if stack.Size() == 0 {
-		return true
-	} else {
-		return false
-	}
+	return stack.Size() == 0
 }
 
 func (stack *Stack) Cycle() {
-	var last = stack.items[len(stack.items)-1]
-	//fmt.Printf("Last: %d\n", last)
-	for i := len(stack.items) - 1; i > 0; i-- {
-		stack.items[i] = stack.items[i-1]
-		//fmt.Printf("%d) %+v\n", i, stack.items)
-	}
-	stack.items[0] = last
+	var s = stack.items
+	var lastPos = len(s) - 1
+	var last = s[lastPos]
+	copy(s[1:], s[:lastPos])
+	s[0] = last
 }
 
 func (stack *Stack) RCycle() {
-	var last = stack.items[0]
-	//fmt.Printf("Last: %d\n", last)
-	for i := 0; i < len(stack.items)-1; i++ {
-		stack.items[i] = stack.items[i+1]
-		//fmt.Printf("%d) %+v\n", i, stack.items)
-	}
-	stack.items[len(stack.items)-1] = last
-}
-
-func insertBottom(x int, s *Stack) {
-	if s.IsEmpty() {
-		s.Push(x)
-	} else {
-		y := s.Peek()
-		s.Pop()
-		insertBottom(x, s)
-		s.Push(y)
-	}
+	var s = stack.items
+	var lastPos = len(s) - 1
+	var last = s[0]
+	copy(s[:lastPos], s[1:])
+	s[lastPos] = last
 }
 
 func (stack *Stack) Reverse() {
-	if stack.Size() > 0 {
-		x := stack.Peek()
-		stack.Pop()
-		stack.Reverse()
-		insertBottom(x, stack)
+	var s = stack.items
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
 	}
 }
 

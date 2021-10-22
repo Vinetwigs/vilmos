@@ -3,13 +3,13 @@ package pixel
 import "strconv"
 
 type Pixel struct {
-	R int
-	G int
-	B int
+	R uint8
+	G uint8
+	B uint8
 }
 
 func (p *Pixel) String() string {
-	return "{R: " + strconv.Itoa(p.R) + " G: " + strconv.Itoa(p.G) + " B: " + strconv.Itoa(p.B) + "}"
+	return "{R: " + strconv.Itoa(int(p.R)) + " G: " + strconv.Itoa(int(p.G)) + " B: " + strconv.Itoa(int(p.B)) + "}"
 }
 
 func (p *Pixel) Equals(other Pixel) bool {
