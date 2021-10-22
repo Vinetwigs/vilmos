@@ -4,15 +4,26 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/color"
 	"image/jpeg"
 	"image/png"
 	"log"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"time"
 	pair "vilmos/pair"
 	pixel "vilmos/pixel"
 	stack "vilmos/stack"
+)
+
+var (
+	ErrorFileExtension   = errors.New("error: target image must be .png")
+	ErrorOpenImage       = errors.New("error: unable to open specified image")
+	ErrorRandomGenerator = errors.New("error: trying to generate a random number with n <= 0")
+	ErrorDecodeImage     = errors.New("error: unable to decode specified image")
+	ErrorOutOfBounds     = errors.New("error: out of bounds")
+	ErrorInvalidHex      = errors.New("error: invalid hex format")
 )
 
 var (
@@ -49,12 +60,13 @@ var (
 )
 
 type Interpreter struct {
-	image image.Image
-	stack stack.Stack
-	pc    pair.Pair
+	image   image.Image
+	stack   stack.Stack
+	pc      pair.Pair
+	isDebug bool
 }
 
-func NewInterpreter() *Interpreter {
+func NewInterpreter(debug bool) *Interpreter {
 	rand.Seed(time.Now().UnixNano())
 
 	interpreter := new(Interpreter)
@@ -63,20 +75,26 @@ func NewInterpreter() *Interpreter {
 
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
-
+	interpreter.isDebug = debug
 	return interpreter
 }
 
 func (i *Interpreter) LoadImage(path string) error {
+	fileExtension := filepath.Ext(path)
+
+	if fileExtension != ".png" {
+		return ErrorFileExtension
+	}
+
 	f, err := os.Open(path)
 	if err != nil {
-		return err
+		return ErrorOpenImage
 	}
 	defer f.Close()
 	image, _, err := image.Decode(f)
 
 	if err != nil {
-		return err
+		return ErrorDecodeImage
 	} else {
 		i.image = image
 
@@ -197,7 +215,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			break
 		}
 		if n <= 0 {
-			logError(errors.New("error: cannot generate a random number with n <= 0"))
+			logError(ErrorRandomGenerator)
 			break
 		}
 		random := rand.Intn(n)
@@ -380,7 +398,7 @@ func (i *Interpreter) increasePC() error {
 		i.pc.SetX(0)
 		return nil
 	}
-	return errors.New("error: out of bounds")
+	return ErrorOutOfBounds
 }
 
 func (i *Interpreter) decreasePC() error {
@@ -393,5 +411,22 @@ func (i *Interpreter) decreasePC() error {
 		i.pc.SetX(WIDTH - 1)
 		return nil
 	}
-	return errors.New("error: out of bounds")
+	return ErrorOutOfBounds
+}
+
+func stringToHex(s string) (c color.RGBA, err error) {
+	c.A = 0xff
+	switch len(s) {
+	case 7:
+		_, err = fmt.Sscanf(s, "#%02x%02x%02x", &c.R, &c.G, &c.B)
+	case 4:
+		_, err = fmt.Sscanf(s, "#%1x%1x%1x", &c.R, &c.G, &c.B)
+		// Double the hex digits:
+		c.R *= 17
+		c.G *= 17
+		c.B *= 17
+	default:
+		err = ErrorInvalidHex
+	}
+	return
 }
