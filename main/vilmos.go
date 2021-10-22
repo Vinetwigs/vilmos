@@ -11,15 +11,34 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const (
+	version string = "1.0.0"
+)
+
 var (
-	ErrorNoImage = errors.New("error: no specified image")
+	ErrorNoImage      = errors.New("error: no specified image")
+	ErrorWrongCommand = errors.New("error: wrong command")
 )
 
 func main() {
 	var debug bool
+	var config_path string
+
+	cli.VersionFlag = &cli.BoolFlag{
+		Name:    "version",
+		Aliases: []string{"V", "v"},
+		Usage:   "shows installed version",
+	}
 
 	app := &cli.App{
-		Name:  "vilmos",
+		Name:    "vilmos",
+		Version: version,
+		Authors: []*cli.Author{
+			&cli.Author{
+				Name:  "Vinetwigs",
+				Email: "github.com/Vinetwigs",
+			},
+		},
 		Usage: "[WIP]",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -28,6 +47,14 @@ func main() {
 				Value:       false,
 				Usage:       "enable debug mode",
 				Destination: &debug,
+			},
+			&cli.StringFlag{
+				Name:        "config",
+				Aliases:     []string{"conf", "c"},
+				Usage:       "set config file path for custom color codes",
+				Value:       "",
+				DefaultText: "not set",
+				Destination: &config_path,
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -47,6 +74,20 @@ func main() {
 				os.Exit(1)
 			}
 			return nil
+		},
+		Commands: []*cli.Command{
+			{
+				Name:    "version",
+				Aliases: []string{"v"},
+				Usage:   "show installed version",
+				Action: func(c *cli.Context) error {
+					fmt.Printf("vilmos %s\n", version)
+					return nil
+				},
+			},
+		},
+		CommandNotFound: func(c *cli.Context, command string) {
+			logError(ErrorWrongCommand)
 		},
 	}
 
