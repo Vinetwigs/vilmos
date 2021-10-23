@@ -21,8 +21,10 @@ var (
 )
 
 func main() {
-	var debug bool
-	var config_path string
+	var (
+		debug      bool
+		configPath string
+	)
 
 	cli.VersionFlag = &cli.BoolFlag{
 		Name:    "version",
@@ -53,16 +55,16 @@ func main() {
 				Aliases:     []string{"conf", "c"},
 				Usage:       "load configuration from `FILE_PATH` for custom color codes",
 				Value:       "",
-				Destination: &config_path,
+				Destination: &configPath,
 			},
 		},
 		Action: func(c *cli.Context) error {
-			var file_path string
+			var filePath string
 			if c.NArg() > 0 {
-				file_path = c.Args().Get(0)
-				i := inter.NewInterpreter(debug, config_path)
+				filePath = c.Args().Get(0)
+				i := inter.NewInterpreter(debug, configPath)
 
-				err := i.LoadImage(file_path)
+				err := i.LoadImage(filePath)
 				if err != nil {
 					logError(err)
 					os.Exit(1)

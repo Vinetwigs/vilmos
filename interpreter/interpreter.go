@@ -24,6 +24,8 @@ var (
 	ErrorOutOfBounds     = errors.New("error: out of bounds")
 	ErrorInvalidHex      = errors.New("error: invalid hex format")
 	ErrorLoadConfig      = errors.New("error: unable to load config file")
+	ErrorCloseFile       = errors.New("error: unable to close the file")
+	ErrorInputScanning   = errors.New("error: problems reading input")
 )
 
 var OPERATIONS = map[string]*pixel.Pixel{
@@ -93,13 +95,18 @@ func (i *Interpreter) LoadImage(path string) error {
 	if err != nil {
 		return ErrorOpenImage
 	}
-	defer f.Close()
-	image, _, err := image.Decode(f)
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			logError(ErrorCloseFile)
+		}
+	}(f)
+	img, _, err := image.Decode(f)
 
 	if err != nil {
 		return ErrorDecodeImage
 	} else {
-		i.image = image
+		i.image = img
 
 		i.width, i.height = i.image.Bounds().Max.X, i.image.Bounds().Max.Y
 		return nil
@@ -119,8 +126,8 @@ func (i *Interpreter) Run() {
 }
 
 func (i *Interpreter) Step() bool {
-	pixel := i.readPixel()
-	processPixel(pixel, i)
+	px := i.readPixel()
+	processPixel(px, i)
 	return true
 }
 
@@ -128,19 +135,28 @@ func (i *Interpreter) readPixel() *pixel.Pixel {
 	return rgbaToPixel(i.image.At(i.pc.X, i.pc.Y).RGBA())
 }
 
-func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) *pixel.Pixel {
+func rgbaToPixel(r uint32, g uint32, b uint32, _ uint32) *pixel.Pixel {
 	return &pixel.Pixel{R: uint8(r / 257), G: uint8(g / 257), B: uint8(b / 257)}
 }
 
 func processPixel(pixel *pixel.Pixel, i *Interpreter) {
+	//goland:noinspection GrazieInspection
 	switch pixel.String() {
 	case OPERATIONS["INPUT_INT"].String(): //Gets value from input as number and pushes it to the stack
 		var val int
-		fmt.Scanf("%d\n", &val)
+		_, err := fmt.Scanf("%d\n", &val)
+		if err != nil {
+			logError(ErrorInputScanning)
+			break
+		}
 		i.stack.Push(val)
 	case OPERATIONS["INPUT_ASCII"].String(): //Gets value from input as ASCII char and pushes it to the stack
 		var val rune
-		fmt.Scanf("%c\n", &val)
+		_, err := fmt.Scanf("%c\n", &val)
+		if err != nil {
+			logError(ErrorInputScanning)
+			break
+		}
 		i.stack.Push(int(val))
 	case OPERATIONS["OUTPUT_INT"].String(): //Pops the top of the stack and outputs it as number
 		val, err := i.stack.Pop()
@@ -211,7 +227,7 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		}
 		sub := v2 % v1
 		i.stack.Push(sub)
-	case OPERATIONS["RND"].String(): //Pops one number, and pushes in the stack a random number between [0, n) where n is the number popped
+	case OPERATIONS["RND"].String(): //Pops one number, and pushes in the stack a random number between [0, n[ where n is the number popped
 		n, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -372,18 +388,18 @@ func jumpForward(i *Interpreter) {
 }
 
 func jumpBack(i *Interpreter) {
-	close := 0
+	closed := 0
 	for {
 		p := i.readPixel()
 		err := i.decreasePC()
 		switch p.String() {
 		case OPERATIONS["WHILE"].String():
-			close--
-			if close == 0 {
+			closed--
+			if closed == 0 {
 				return
 			}
 		case OPERATIONS["WHILE_END"].String():
-			close++
+			closed++
 		}
 		if err != nil {
 			logError(errors.New("error: missing start loop"))
@@ -450,11 +466,11 @@ func loadConfigs(path string) error {
 	for op := range OPERATIONS {
 		value := cfg.Section("Colors").Key(op).String()
 		if len(value) != 0 {
-			new_px, err := hexToPixel(value)
+			newPx, err := hexToPixel(value)
 			if err != nil {
 				return ErrorInvalidHex
 			}
-			OPERATIONS[op] = new_px
+			OPERATIONS[op] = newPx
 		}
 	}
 	return err
