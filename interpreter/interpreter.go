@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 	"vilmos/pixel"
 	"vilmos/stack"
@@ -118,17 +119,27 @@ func (i *Interpreter) GetImage() image.Image {
 }
 
 func (i *Interpreter) Run() {
-	var err error = nil
+	err := error(nil)
+	stepCount := 0
 	for err == nil {
-		i.Step()
+		_, msg := i.Step()
+		stepCount++
+		if i.isDebug {
+			debug(i, stepCount, msg)
+			_, e := fmt.Scanf("\n")
+			if e != nil {
+				logError(ErrorInputScanning)
+				return
+			}
+		}
 		err = i.increasePC()
 	}
 }
 
-func (i *Interpreter) Step() bool {
+func (i *Interpreter) Step() (bool, string) {
 	px := i.readPixel()
-	processPixel(px, i)
-	return true
+	msg := processPixel(px, i)
+	return true, msg
 }
 
 func (i *Interpreter) readPixel() *pixel.Pixel {
@@ -139,7 +150,7 @@ func rgbaToPixel(r uint32, g uint32, b uint32, _ uint32) *pixel.Pixel {
 	return &pixel.Pixel{R: uint8(r / 257), G: uint8(g / 257), B: uint8(b / 257)}
 }
 
-func processPixel(pixel *pixel.Pixel, i *Interpreter) {
+func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 	//goland:noinspection GrazieInspection
 	switch pixel.String() {
 	case OPERATIONS["INPUT_INT"].String(): //Gets value from input as number and pushes it to the stack
@@ -150,6 +161,11 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			break
 		}
 		i.stack.Push(val)
+		if i.isDebug {
+			return "Pushed " + strconv.Itoa(val) + " into the stack"
+		} else {
+			return ""
+		}
 	case OPERATIONS["INPUT_ASCII"].String(): //Gets value from input as ASCII char and pushes it to the stack
 		var val rune
 		_, err := fmt.Scanf("%c\n", &val)
@@ -343,7 +359,9 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		i.stack.Push(int(sum))
+		return "Pushed " + strconv.Itoa(int(sum)) + " into the stack"
 	}
+	return ""
 }
 
 func logError(e error) {
@@ -474,4 +492,12 @@ func loadConfigs(path string) error {
 		}
 	}
 	return err
+}
+
+func debug(i *Interpreter, step int, message string) {
+	fmt.Printf("\n############ Step %d ############\n", step)
+	fmt.Printf("Message: \033[33m%s\033[0m", message)
+	for index := i.stack.Size() - 1; index >= 0; index-- {
+		fmt.Printf("\n| %d  |", i.stack.GetItemAt(index))
+	}
 }

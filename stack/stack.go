@@ -77,3 +77,7 @@ func (stack *Stack) Output() {
 		fmt.Printf("%d", stack.items[i])
 	}
 }
+
+func (stack *Stack) GetItemAt(i int) int {
+	return stack.items[i]
+}
