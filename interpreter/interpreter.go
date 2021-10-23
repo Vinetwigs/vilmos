@@ -601,6 +601,6 @@ func debug(i *Interpreter, step int, message string) {
 	fmt.Printf("\n############ Step %d ############\n", step)
 	fmt.Printf("Message: \033[33m%s\033[0m", message)
 	for index := i.stack.Size() - 1; index >= 0; index-- {
-		fmt.Printf("\n| %d  |", i.stack.GetItemAt(index))
+		fmt.Printf("\n| %d  |\n", i.stack.GetItemAt(index))
 	}
 }
