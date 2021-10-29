@@ -507,9 +507,24 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 	case OPERATIONS["WHILE"].String():
 		if i.stack.Peek() == 0 { //exits the loop if top is false
 			jumpForward(i)
+			if i.isDebug {
+				return "Jumped forward for while loop"
+			} else {
+				return ""
+			}
+		}
+		if i.isDebug {
+			return "Entered in while loop"
+		} else {
+			return ""
 		}
 	case OPERATIONS["WHILE_END"].String():
 		jumpBack(i)
+		if i.isDebug {
+			return "Jumped back for while loop"
+		} else {
+			return ""
+		}
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		err := i.stack.Push(int(sum))
