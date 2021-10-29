@@ -66,13 +66,13 @@ type Interpreter struct {
 	isDebug bool
 }
 
-func NewInterpreter(debug bool, configs string) *Interpreter {
+func NewInterpreter(debug bool, configs string, maxSize int) *Interpreter {
 	rand.Seed(time.Now().UnixNano())
 
 	interpreter := new(Interpreter)
 	interpreter.image = nil
 	interpreter.pc = image.Point{X: 0, Y: 0}
-	interpreter.stack = stack.NewStack()
+	interpreter.stack = stack.NewStack(maxSize)
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	interpreter.isDebug = debug
 
@@ -160,7 +160,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			logError(ErrorInputScanning)
 			break
 		}
-		i.stack.Push(val)
+		err = i.stack.Push(val)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Pushed " + strconv.Itoa(val) + " into the stack"
 		} else {
@@ -173,7 +176,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			logError(ErrorInputScanning)
 			break
 		}
-		i.stack.Push(int(val))
+		err = i.stack.Push(int(val))
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Pushed " + string(val) + " into the stack"
 		} else {
@@ -213,7 +219,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		sum := v1 + v2
-		i.stack.Push(sum)
+		err = i.stack.Push(sum)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack their sum (" + strconv.Itoa(sum) + ")"
 		} else {
@@ -229,7 +238,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		sub := v2 - v1
-		i.stack.Push(sub)
+		err = i.stack.Push(sub)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack their difference (" + strconv.Itoa(sub) + ")"
 		} else {
@@ -245,7 +257,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		div := v2 / v1
-		i.stack.Push(div)
+		err = i.stack.Push(div)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their division (" + strconv.Itoa(div) + ")"
 		} else {
@@ -261,7 +276,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		mul := v1 * v2
-		i.stack.Push(mul)
+		err = i.stack.Push(mul)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack their multiplication (" + strconv.Itoa(mul) + ")"
 		} else {
@@ -277,7 +295,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		mod := v2 % v1
-		i.stack.Push(mod)
+		err = i.stack.Push(mod)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their modulus (" + strconv.Itoa(mod) + ")"
 		} else {
@@ -294,7 +315,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			break
 		}
 		random := rand.Intn(n)
-		i.stack.Push(random)
+		err = i.stack.Push(random)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Random generated " + strconv.Itoa(random) + " [range 0 to" + strconv.Itoa(n-1) + "] and the pushed it into the stack"
 		} else {
@@ -312,7 +336,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			break
 		}
 		result := Itob(v1) && Itob(v2)
-		i.stack.Push(Btoi(result))
+		err = i.stack.Push(Btoi(result))
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their AND (" + strconv.Itoa(Btoi(result)) + ")"
 		} else {
@@ -330,7 +357,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			break
 		}
 		result := Itob(v1) || Itob(v2)
-		i.stack.Push(Btoi(result))
+		err = i.stack.Push(Btoi(result))
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their OR (" + strconv.Itoa(Btoi(result)) + ")"
 		} else {
@@ -348,7 +378,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			break
 		}
 		result := Itob(v1) != Itob(v2)
-		i.stack.Push(Btoi(result))
+		err = i.stack.Push(Btoi(result))
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their XOR (" + strconv.Itoa(Btoi(result)) + ")"
 		} else {
@@ -366,7 +399,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			break
 		}
 		result := nand(Itob(v1), Itob(v2))
-		i.stack.Push(Btoi(result))
+		err = i.stack.Push(Btoi(result))
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their NAND (" + strconv.Itoa(Btoi(result)) + ")"
 		} else {
@@ -379,7 +415,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			break
 		}
 		result := Btoi(!Itob(v1))
-		i.stack.Push(result)
+		err = i.stack.Push(result)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + " from the stack and the pushed into the stack its NOT (" + strconv.Itoa(result) + ")"
 		} else {
@@ -404,8 +443,14 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 		if err != nil {
 			logError(err)
 		}
-		i.stack.Push(v1)
-		i.stack.Push(v2)
+		err = i.stack.Push(v1)
+		if err != nil {
+			logError(err)
+		}
+		err = i.stack.Push(v2)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and pushed in reverse order to swap them"
 		} else {
@@ -431,8 +476,14 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 			logError(err)
 			break
 		}
-		i.stack.Push(val)
-		i.stack.Push(val)
+		err = i.stack.Push(val)
+		if err != nil {
+			logError(err)
+		}
+		err = i.stack.Push(val)
+		if err != nil {
+			logError(err)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(val) + " and the pushed it twice to duplicate it"
 		} else {
@@ -461,7 +512,10 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
 		jumpBack(i)
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
-		i.stack.Push(int(sum))
+		err := i.stack.Push(int(sum))
+		if err != nil {
+			logError(err)
+		}
 		return "Pushed " + strconv.Itoa(int(sum)) + " into the stack"
 	}
 	return ""

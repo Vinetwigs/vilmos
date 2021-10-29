@@ -6,21 +6,30 @@ import (
 )
 
 var (
-	ErrorPop = errors.New("error: trying to pop an empty stack")
+	ErrorPop       = errors.New("error: trying to pop an empty stack")
+	ErrorFullStack = errors.New("error: trying to push in a full stack")
 )
 
 type Stack struct {
-	items []int
+	items   []int
+	maxSize int
 }
 
-func NewStack() *Stack {
+func NewStack(maxSize int) *Stack {
 	stack := new(Stack)
+	stack.maxSize = maxSize
 	return stack
 }
 
-func (stack *Stack) Push(val int) {
-	stack.items = append(stack.items, val)
-
+func (stack *Stack) Push(val int) error {
+	if stack.maxSize == -1 {
+		stack.items = append(stack.items, val)
+		return nil
+	} else if len(stack.items) < stack.maxSize {
+		stack.items = append(stack.items, val)
+		return nil
+	}
+	return ErrorFullStack
 	//fmt.Printf("Stack (push) -> %+v\n", stack.items)
 }
 

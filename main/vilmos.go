@@ -24,6 +24,7 @@ func main() {
 	var (
 		debug      bool
 		configPath string
+		maxSize    int
 	)
 
 	cli.VersionFlag = &cli.BoolFlag{
@@ -57,12 +58,19 @@ func main() {
 				Value:       "",
 				Destination: &configPath,
 			},
+			&cli.IntFlag{
+				Name:        "max_size",
+				Aliases:     []string{"m"},
+				Usage:       "set max memory size",
+				Value:       -1,
+				Destination: &maxSize,
+			},
 		},
 		Action: func(c *cli.Context) error {
 			var filePath string
 			if c.NArg() > 0 {
 				filePath = c.Args().Get(0)
-				i := inter.NewInterpreter(debug, configPath)
+				i := inter.NewInterpreter(debug, configPath, maxSize)
 
 				err := i.LoadImage(filePath)
 				if err != nil {
