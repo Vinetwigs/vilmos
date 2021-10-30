@@ -217,7 +217,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack their sum (" + strconv.Itoa(sum) + ")"
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack their sum (" + strconv.Itoa(sum) + ")"
 		} else {
 			return ""
 		}
@@ -236,7 +236,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack their difference (" + strconv.Itoa(sub) + ")"
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack their difference (" + strconv.Itoa(sub) + ")"
 		} else {
 			return ""
 		}
@@ -255,7 +255,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their division (" + strconv.Itoa(div) + ")"
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their division (" + strconv.Itoa(div) + ")"
 		} else {
 			return ""
 		}
@@ -274,7 +274,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack their multiplication (" + strconv.Itoa(mul) + ")"
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack their multiplication (" + strconv.Itoa(mul) + ")"
 		} else {
 			return ""
 		}
@@ -293,7 +293,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their modulus (" + strconv.Itoa(mod) + ")"
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their modulus (" + strconv.Itoa(mod) + ")"
 		} else {
 			return ""
 		}
@@ -313,7 +313,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Random generated " + strconv.Itoa(random) + " [range 0 to" + strconv.Itoa(n-1) + "] and the pushed it into the stack"
+			return "Random generated " + strconv.Itoa(random) + " [range 0 to" + strconv.Itoa(n-1) + "] and then pushed it into the stack"
 		} else {
 			return ""
 		}
@@ -334,7 +334,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their AND (" + strconv.Itoa(Btoi(result)) + ")"
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their AND (" + strconv.Itoa(Btoi(result)) + ")"
 		} else {
 			return ""
 		}
@@ -355,7 +355,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their OR (" + strconv.Itoa(Btoi(result)) + ")"
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their OR (" + strconv.Itoa(Btoi(result)) + ")"
 		} else {
 			return ""
 		}
@@ -376,7 +376,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their XOR (" + strconv.Itoa(Btoi(result)) + ")"
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their XOR (" + strconv.Itoa(Btoi(result)) + ")"
 		} else {
 			return ""
 		}
@@ -397,7 +397,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and the pushed into the stack the result of their NAND (" + strconv.Itoa(Btoi(result)) + ")"
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their NAND (" + strconv.Itoa(Btoi(result)) + ")"
 		} else {
 			return ""
 		}
@@ -413,7 +413,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(v1) + " from the stack and the pushed into the stack its NOT (" + strconv.Itoa(result) + ")"
+			return "Popped " + strconv.Itoa(v1) + " from the stack and then pushed into the stack its NOT (" + strconv.Itoa(result) + ")"
 		} else {
 			return ""
 		}
@@ -478,7 +478,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Popped " + strconv.Itoa(val) + " and the pushed it twice to duplicate it"
+			return "Popped " + strconv.Itoa(val) + " and then pushed it twice to duplicate it"
 		} else {
 			return ""
 		}
