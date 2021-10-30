@@ -124,11 +124,6 @@ func (i *Interpreter) Run() {
 		stepCount++
 		if i.isDebug {
 			debug(i, stepCount, msg)
-			_, e := fmt.Scanf("\n")
-			if e != nil {
-				logError(ErrorInputScanning)
-				return
-			}
 		}
 		err = i.increasePC()
 	}
@@ -149,13 +144,13 @@ func rgbaToPixel(r uint32, g uint32, b uint32, _ uint32) *Pixel {
 }
 
 func processPixel(pixel *Pixel, i *Interpreter) string {
-	//goland:noinspection GrazieInspection
 	switch pixel.String() {
 	case OPERATIONS["INPUT_INT"].String(): //Gets value from input as number and pushes it to the stack
 		var val int
 		_, err := fmt.Scanf("%d\n", &val)
 		if err != nil {
-			logError(ErrorInputScanning)
+			print(err.Error())
+			//logError(ErrorInputScanning)
 			break
 		}
 		err = i.stack.Push(val)
@@ -670,4 +665,5 @@ func debug(i *Interpreter, step int, message string) {
 	for index := i.stack.Size() - 1; index >= 0; index-- {
 		fmt.Printf("\n| %d  |", i.stack.GetItemAt(index))
 	}
+	fmt.Println()
 }
