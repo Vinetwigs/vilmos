@@ -1,4 +1,4 @@
-package pixel
+package interpreter
 
 import "strconv"
 

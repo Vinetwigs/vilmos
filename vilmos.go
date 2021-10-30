@@ -13,6 +13,7 @@ import (
 
 const (
 	version string = "1.0.0"
+	usage   string = "[WIP]"
 )
 
 var (
@@ -30,7 +31,7 @@ func main() {
 	cli.VersionFlag = &cli.BoolFlag{
 		Name:    "version",
 		Aliases: []string{"V", "v"},
-		Usage:   "shows installed version",
+		Usage:   "Shows installed version",
 	}
 
 	app := &cli.App{
@@ -42,7 +43,7 @@ func main() {
 				Email: "github.com/Vinetwigs",
 			},
 		},
-		Usage: "[WIP]",
+		Usage: usage,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "debug",

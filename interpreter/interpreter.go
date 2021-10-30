@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
-	"vilmos/pixel"
-	"vilmos/stack"
 
 	"gopkg.in/ini.v1"
 )
@@ -29,7 +27,7 @@ var (
 	ErrorInputScanning   = errors.New("error: problems reading input")
 )
 
-var OPERATIONS = map[string]*pixel.Pixel{
+var OPERATIONS = map[string]*Pixel{
 	"INPUT_INT":    {R: 255, G: 255, B: 255}, //#ffffff -> INPUT INT
 	"OUTPUT_INT":   {R: 0, G: 0, B: 0},       //#000000 -> OUTPUT INT
 	"SUM":          {R: 0, G: 206, B: 209},   //#00ced1 -> SUM
@@ -59,7 +57,7 @@ var OPERATIONS = map[string]*pixel.Pixel{
 
 type Interpreter struct {
 	image   image.Image
-	stack   *stack.Stack
+	stack   *Stack
 	pc      image.Point
 	width   int
 	height  int
@@ -72,7 +70,7 @@ func NewInterpreter(debug bool, configs string, maxSize int) *Interpreter {
 	interpreter := new(Interpreter)
 	interpreter.image = nil
 	interpreter.pc = image.Point{X: 0, Y: 0}
-	interpreter.stack = stack.NewStack(maxSize)
+	interpreter.stack = NewStack(maxSize)
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	interpreter.isDebug = debug
 
@@ -142,15 +140,15 @@ func (i *Interpreter) Step() (bool, string) {
 	return true, msg
 }
 
-func (i *Interpreter) readPixel() *pixel.Pixel {
+func (i *Interpreter) readPixel() *Pixel {
 	return rgbaToPixel(i.image.At(i.pc.X, i.pc.Y).RGBA())
 }
 
-func rgbaToPixel(r uint32, g uint32, b uint32, _ uint32) *pixel.Pixel {
-	return &pixel.Pixel{R: uint8(r / 257), G: uint8(g / 257), B: uint8(b / 257)}
+func rgbaToPixel(r uint32, g uint32, b uint32, _ uint32) *Pixel {
+	return &Pixel{R: uint8(r / 257), G: uint8(g / 257), B: uint8(b / 257)}
 }
 
-func processPixel(pixel *pixel.Pixel, i *Interpreter) string {
+func processPixel(pixel *Pixel, i *Interpreter) string {
 	//goland:noinspection GrazieInspection
 	switch pixel.String() {
 	case OPERATIONS["INPUT_INT"].String(): //Gets value from input as number and pushes it to the stack
@@ -623,7 +621,7 @@ func (i *Interpreter) decreasePC() error {
 	return ErrorOutOfBounds
 }
 
-func hexToPixel(s string) (p *pixel.Pixel, err error) {
+func hexToPixel(s string) (p *Pixel, err error) {
 	var r, g, b int
 	switch len(s) {
 	case 6:
@@ -631,7 +629,7 @@ func hexToPixel(s string) (p *pixel.Pixel, err error) {
 		if err != nil {
 			return nil, ErrorInvalidHex
 		}
-		return &pixel.Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
+		return &Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
 	case 3:
 		_, err = fmt.Sscanf(s, "%1x%1x%1x", &r, &g, &b)
 		if err != nil {
@@ -641,7 +639,7 @@ func hexToPixel(s string) (p *pixel.Pixel, err error) {
 		r *= 17
 		g *= 17
 		b *= 17
-		return &pixel.Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
+		return &Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
 	default:
 		err = ErrorInvalidHex
 		return nil, err
