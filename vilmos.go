@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	inter "vilmos/interpreter"
+
+	inter "github.com/Vinetwigs/vilmos/interpreter"
 
 	"github.com/urfave/cli/v2"
 )
