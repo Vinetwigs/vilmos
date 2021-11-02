@@ -124,6 +124,11 @@ func (i *Interpreter) Run() {
 		stepCount++
 		if i.isDebug {
 			debug(i, stepCount, msg)
+			_, e := fmt.Scanf("\n")
+			if e != nil {
+				logError(ErrorInputScanning)
+				return
+			}
 		}
 		err = i.increasePC()
 	}
@@ -149,8 +154,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 		var val int
 		_, err := fmt.Scanf("%d\n", &val)
 		if err != nil {
-			print(err.Error())
-			//logError(ErrorInputScanning)
+			logError(ErrorInputScanning)
 			break
 		}
 		err = i.stack.Push(val)
@@ -313,7 +317,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			logError(err)
 		}
 		if i.isDebug {
-			return "Random generated " + strconv.Itoa(random) + " [range 0 to" + strconv.Itoa(n-1) + "] and then pushed it into the stack"
+			return "Random generated " + strconv.Itoa(random) + " [range 0 to " + strconv.Itoa(n-1) + "] and then pushed it into the stack"
 		} else {
 			return ""
 		}
@@ -663,7 +667,7 @@ func debug(i *Interpreter, step int, message string) {
 	fmt.Printf("\n############ Step %d ############\n", step)
 	fmt.Printf("Message: \033[33m%s\033[0m", message)
 	for index := i.stack.Size() - 1; index >= 0; index-- {
-		fmt.Printf("\n| %d  |", i.stack.GetItemAt(index))
+		fmt.Printf("\n|%8d|", i.stack.GetItemAt(index))
 	}
-	fmt.Println()
+	fmt.Print("\nPress ENTER to step over:")
 }

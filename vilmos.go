@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"flag"
 	"errors"
 	"fmt"
 	"log"
@@ -14,7 +13,7 @@ import (
 
 const (
 	version string = "1.0.0"
-	usage   string = "[WIP]"
+	usage   string = "Official vilmos language interpreter"
 )
 
 var (
