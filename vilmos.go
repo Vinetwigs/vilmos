@@ -1,18 +1,19 @@
 package main
 
 import (
-	//"flag"
 	"errors"
 	"fmt"
 	"log"
 	"os"
-	inter "vilmos/interpreter"
+
+	inter "github.com/Vinetwigs/vilmos/interpreter"
 
 	"github.com/urfave/cli/v2"
 )
 
 const (
 	version string = "1.0.0"
+	usage   string = "Official vilmos language interpreter"
 )
 
 var (
@@ -21,13 +22,16 @@ var (
 )
 
 func main() {
-	var debug bool
-	var config_path string
+	var (
+		debug      bool
+		configPath string
+		maxSize    int
+	)
 
 	cli.VersionFlag = &cli.BoolFlag{
 		Name:    "version",
 		Aliases: []string{"V", "v"},
-		Usage:   "shows installed version",
+		Usage:   "Shows installed version",
 	}
 
 	app := &cli.App{
@@ -39,7 +43,7 @@ func main() {
 				Email: "github.com/Vinetwigs",
 			},
 		},
-		Usage: "[WIP]",
+		Usage: usage,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "debug",
@@ -53,16 +57,23 @@ func main() {
 				Aliases:     []string{"conf", "c"},
 				Usage:       "load configuration from `FILE_PATH` for custom color codes",
 				Value:       "",
-				Destination: &config_path,
+				Destination: &configPath,
+			},
+			&cli.IntFlag{
+				Name:        "max_size",
+				Aliases:     []string{"m"},
+				Usage:       "set max memory size",
+				Value:       -1,
+				Destination: &maxSize,
 			},
 		},
 		Action: func(c *cli.Context) error {
-			var file_path string
+			var filePath string
 			if c.NArg() > 0 {
-				file_path = c.Args().Get(0)
-				i := inter.NewInterpreter(debug, config_path)
+				filePath = c.Args().Get(0)
+				i := inter.NewInterpreter(debug, configPath, maxSize)
 
-				err := i.LoadImage(file_path)
+				err := i.LoadImage(filePath)
 				if err != nil {
 					logError(err)
 					os.Exit(1)

@@ -9,9 +9,8 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
-	"vilmos/pixel"
-	"vilmos/stack"
 
 	"gopkg.in/ini.v1"
 )
@@ -24,9 +23,11 @@ var (
 	ErrorOutOfBounds     = errors.New("error: out of bounds")
 	ErrorInvalidHex      = errors.New("error: invalid hex format")
 	ErrorLoadConfig      = errors.New("error: unable to load config file")
+	ErrorCloseFile       = errors.New("error: unable to close the file")
+	ErrorInputScanning   = errors.New("error: problems reading input")
 )
 
-var OPERATIONS = map[string]*pixel.Pixel{
+var OPERATIONS = map[string]*Pixel{
 	"INPUT_INT":    {R: 255, G: 255, B: 255}, //#ffffff -> INPUT INT
 	"OUTPUT_INT":   {R: 0, G: 0, B: 0},       //#000000 -> OUTPUT INT
 	"SUM":          {R: 0, G: 206, B: 209},   //#00ced1 -> SUM
@@ -56,20 +57,20 @@ var OPERATIONS = map[string]*pixel.Pixel{
 
 type Interpreter struct {
 	image   image.Image
-	stack   *stack.Stack
+	stack   *Stack
 	pc      image.Point
 	width   int
 	height  int
 	isDebug bool
 }
 
-func NewInterpreter(debug bool, configs string) *Interpreter {
+func NewInterpreter(debug bool, configs string, maxSize int) *Interpreter {
 	rand.Seed(time.Now().UnixNano())
 
 	interpreter := new(Interpreter)
 	interpreter.image = nil
 	interpreter.pc = image.Point{X: 0, Y: 0}
-	interpreter.stack = stack.NewStack()
+	interpreter.stack = NewStack(maxSize)
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 	interpreter.isDebug = debug
 
@@ -93,13 +94,18 @@ func (i *Interpreter) LoadImage(path string) error {
 	if err != nil {
 		return ErrorOpenImage
 	}
-	defer f.Close()
-	image, _, err := image.Decode(f)
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			logError(ErrorCloseFile)
+		}
+	}(f)
+	img, _, err := image.Decode(f)
 
 	if err != nil {
 		return ErrorDecodeImage
 	} else {
-		i.image = image
+		i.image = img
 
 		i.width, i.height = i.image.Bounds().Max.X, i.image.Bounds().Max.Y
 		return nil
@@ -111,43 +117,82 @@ func (i *Interpreter) GetImage() image.Image {
 }
 
 func (i *Interpreter) Run() {
-	var err error = nil
+	err := error(nil)
+	stepCount := 0
 	for err == nil {
-		i.Step()
+		_, msg := i.Step()
+		stepCount++
+		if i.isDebug {
+			debug(i, stepCount, msg)
+			_, e := fmt.Scanf("\n")
+			if e != nil {
+				logError(ErrorInputScanning)
+				return
+			}
+		}
 		err = i.increasePC()
 	}
 }
 
-func (i *Interpreter) Step() bool {
-	pixel := i.readPixel()
-	processPixel(pixel, i)
-	return true
+func (i *Interpreter) Step() (bool, string) {
+	px := i.readPixel()
+	msg := processPixel(px, i)
+	return true, msg
 }
 
-func (i *Interpreter) readPixel() *pixel.Pixel {
+func (i *Interpreter) readPixel() *Pixel {
 	return rgbaToPixel(i.image.At(i.pc.X, i.pc.Y).RGBA())
 }
 
-func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) *pixel.Pixel {
-	return &pixel.Pixel{R: uint8(r / 257), G: uint8(g / 257), B: uint8(b / 257)}
+func rgbaToPixel(r uint32, g uint32, b uint32, _ uint32) *Pixel {
+	return &Pixel{R: uint8(r / 257), G: uint8(g / 257), B: uint8(b / 257)}
 }
 
-func processPixel(pixel *pixel.Pixel, i *Interpreter) {
+func processPixel(pixel *Pixel, i *Interpreter) string {
 	switch pixel.String() {
 	case OPERATIONS["INPUT_INT"].String(): //Gets value from input as number and pushes it to the stack
 		var val int
-		fmt.Scanf("%d\n", &val)
-		i.stack.Push(val)
+		_, err := fmt.Scanf("%d\n", &val)
+		if err != nil {
+			logError(ErrorInputScanning)
+			break
+		}
+		err = i.stack.Push(val)
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Pushed " + strconv.Itoa(val) + " into the stack"
+		} else {
+			return ""
+		}
 	case OPERATIONS["INPUT_ASCII"].String(): //Gets value from input as ASCII char and pushes it to the stack
 		var val rune
-		fmt.Scanf("%c\n", &val)
-		i.stack.Push(int(val))
+		_, err := fmt.Scanf("%c\n", &val)
+		if err != nil {
+			logError(ErrorInputScanning)
+			break
+		}
+		err = i.stack.Push(int(val))
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Pushed " + string(val) + " into the stack"
+		} else {
+			return ""
+		}
 	case OPERATIONS["OUTPUT_INT"].String(): //Pops the top of the stack and outputs it as number
 		val, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
 		} else {
 			fmt.Printf("%d", val)
+			if i.isDebug {
+				return "Popped " + strconv.Itoa(val) + " from the stack and printed it in the console"
+			} else {
+				return ""
+			}
 		}
 	case OPERATIONS["OUTPUT_ASCII"].String(): //Pops the top of the stack and outputs it as ASCII char
 		val, err := i.stack.Pop()
@@ -155,6 +200,11 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			logError(err)
 		} else {
 			fmt.Printf("%c", val)
+			if i.isDebug {
+				return "Popped " + string(rune(val)) + " from the stack and printed it in the console"
+			} else {
+				return ""
+			}
 		}
 	case OPERATIONS["SUM"].String(): //Pops two numbers, adds them and pushes the result in the stack
 		v1, err := i.stack.Pop()
@@ -166,7 +216,15 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			logError(err)
 		}
 		sum := v1 + v2
-		i.stack.Push(sum)
+		err = i.stack.Push(sum)
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack their sum (" + strconv.Itoa(sum) + ")"
+		} else {
+			return ""
+		}
 	case OPERATIONS["SUB"].String(): //Pops two numbers, subtracts them and pushes the result in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
@@ -177,7 +235,15 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			logError(err)
 		}
 		sub := v2 - v1
-		i.stack.Push(sub)
+		err = i.stack.Push(sub)
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack their difference (" + strconv.Itoa(sub) + ")"
+		} else {
+			return ""
+		}
 	case OPERATIONS["DIV"].String(): //Pops two numbers, divides them and pushes the result in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
@@ -187,8 +253,16 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		if err != nil {
 			logError(err)
 		}
-		sub := v2 / v1
-		i.stack.Push(sub)
+		div := v2 / v1
+		err = i.stack.Push(div)
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their division (" + strconv.Itoa(div) + ")"
+		} else {
+			return ""
+		}
 	case OPERATIONS["MUL"].String(): //Pops two numbers, multiplies them and pushes the result in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
@@ -198,8 +272,16 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		if err != nil {
 			logError(err)
 		}
-		sub := v1 * v2
-		i.stack.Push(sub)
+		mul := v1 * v2
+		err = i.stack.Push(mul)
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack their multiplication (" + strconv.Itoa(mul) + ")"
+		} else {
+			return ""
+		}
 	case OPERATIONS["MOD"].String(): //Pops two numbers, and pushes the result of the modulus in the stack
 		v1, err := i.stack.Pop()
 		if err != nil {
@@ -209,9 +291,17 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		if err != nil {
 			logError(err)
 		}
-		sub := v2 % v1
-		i.stack.Push(sub)
-	case OPERATIONS["RND"].String(): //Pops one number, and pushes in the stack a random number between [0, n) where n is the number popped
+		mod := v2 % v1
+		err = i.stack.Push(mod)
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their modulus (" + strconv.Itoa(mod) + ")"
+		} else {
+			return ""
+		}
+	case OPERATIONS["RND"].String(): //Pops one number, and pushes in the stack a random number between [0, n[ where n is the number popped
 		n, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
@@ -222,7 +312,15 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			break
 		}
 		random := rand.Intn(n)
-		i.stack.Push(random)
+		err = i.stack.Push(random)
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Random generated " + strconv.Itoa(random) + " [range 0 to " + strconv.Itoa(n-1) + "] and then pushed it into the stack"
+		} else {
+			return ""
+		}
 	case OPERATIONS["AND"].String(): //Pops two numbers, and pushes the result of AND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
@@ -235,7 +333,15 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			break
 		}
 		result := Itob(v1) && Itob(v2)
-		i.stack.Push(Btoi(result))
+		err = i.stack.Push(Btoi(result))
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their AND (" + strconv.Itoa(Btoi(result)) + ")"
+		} else {
+			return ""
+		}
 	case OPERATIONS["OR"].String(): //Pops two numbers, and pushes the result of OR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
@@ -248,7 +354,15 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			break
 		}
 		result := Itob(v1) || Itob(v2)
-		i.stack.Push(Btoi(result))
+		err = i.stack.Push(Btoi(result))
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their OR (" + strconv.Itoa(Btoi(result)) + ")"
+		} else {
+			return ""
+		}
 	case OPERATIONS["XOR"].String(): //Pops two numbers, and pushes the result of XOR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
@@ -261,7 +375,15 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			break
 		}
 		result := Itob(v1) != Itob(v2)
-		i.stack.Push(Btoi(result))
+		err = i.stack.Push(Btoi(result))
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their XOR (" + strconv.Itoa(Btoi(result)) + ")"
+		} else {
+			return ""
+		}
 	case OPERATIONS["NAND"].String(): //Pops two numbers, and pushes the result of NAND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
@@ -274,7 +396,15 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			break
 		}
 		result := nand(Itob(v1), Itob(v2))
-		i.stack.Push(Btoi(result))
+		err = i.stack.Push(Btoi(result))
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their NAND (" + strconv.Itoa(Btoi(result)) + ")"
+		} else {
+			return ""
+		}
 	case OPERATIONS["NOT"].String(): //Pops one number, and pushes the result of NOT [0 is false, anything else is true] [pushes 1 if true or 0 is false]
 		v1, err := i.stack.Pop()
 		if err != nil {
@@ -282,11 +412,24 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 			break
 		}
 		result := Btoi(!Itob(v1))
-		i.stack.Push(result)
-	case OPERATIONS["POP"].String(): //Pops one number, and discardes it
-		_, err := i.stack.Pop()
+		err = i.stack.Push(result)
 		if err != nil {
 			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + " from the stack and then pushed into the stack its NOT (" + strconv.Itoa(result) + ")"
+		} else {
+			return ""
+		}
+	case OPERATIONS["POP"].String(): //Pops one number, and discardes it
+		v, err := i.stack.Pop()
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v) + " from the stack"
+		} else {
+			return ""
 		}
 	case OPERATIONS["SWAP"].String(): //Swaps the top two items in the stack
 		v1, err := i.stack.Pop()
@@ -297,37 +440,97 @@ func processPixel(pixel *pixel.Pixel, i *Interpreter) {
 		if err != nil {
 			logError(err)
 		}
-		i.stack.Push(v1)
-		i.stack.Push(v2)
+		err = i.stack.Push(v1)
+		if err != nil {
+			logError(err)
+		}
+		err = i.stack.Push(v2)
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and pushed in reverse order to swap them"
+		} else {
+			return ""
+		}
 	case OPERATIONS["CYCLE"].String(): //Cycles clockwise the stack
 		i.stack.Cycle()
+		if i.isDebug {
+			return "Cycled clockwise by one step the stack"
+		} else {
+			return ""
+		}
 	case OPERATIONS["RCYCLE"].String(): //Cycles anti-clockwise the stack
 		i.stack.RCycle()
+		if i.isDebug {
+			return "Cycled counter-clockwise by one step the stack"
+		} else {
+			return ""
+		}
 	case OPERATIONS["DUP"].String(): //Duplicates the top of the stack
 		val, err := i.stack.Pop()
 		if err != nil {
 			logError(err)
 			break
 		}
-		i.stack.Push(val)
-		i.stack.Push(val)
+		err = i.stack.Push(val)
+		if err != nil {
+			logError(err)
+		}
+		err = i.stack.Push(val)
+		if err != nil {
+			logError(err)
+		}
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(val) + " and then pushed it twice to duplicate it"
+		} else {
+			return ""
+		}
 	case OPERATIONS["REVERSE"].String(): //Reverses the content of the stack
 		i.stack.Reverse()
+		if i.isDebug {
+			return "Reversed stack content"
+		}
 	case OPERATIONS["QUIT"].String(): //Exits the program
 		fmt.Printf("\n")
 		os.Exit(1)
 	case OPERATIONS["OUTPUT"].String(): //Outputs all the content of the stack without popping it
 		i.stack.Output()
+		if i.isDebug {
+			return "Outputted all the stack content"
+		} else {
+			return ""
+		}
 	case OPERATIONS["WHILE"].String():
 		if i.stack.Peek() == 0 { //exits the loop if top is false
 			jumpForward(i)
+			if i.isDebug {
+				return "Jumped forward for while loop"
+			} else {
+				return ""
+			}
+		}
+		if i.isDebug {
+			return "Entered in while loop"
+		} else {
+			return ""
 		}
 	case OPERATIONS["WHILE_END"].String():
 		jumpBack(i)
+		if i.isDebug {
+			return "Jumped back for while loop"
+		} else {
+			return ""
+		}
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
-		i.stack.Push(int(sum))
+		err := i.stack.Push(int(sum))
+		if err != nil {
+			logError(err)
+		}
+		return "Pushed " + strconv.Itoa(int(sum)) + " into the stack"
 	}
+	return ""
 }
 
 func logError(e error) {
@@ -372,18 +575,18 @@ func jumpForward(i *Interpreter) {
 }
 
 func jumpBack(i *Interpreter) {
-	close := 0
+	closed := 0
 	for {
 		p := i.readPixel()
 		err := i.decreasePC()
 		switch p.String() {
 		case OPERATIONS["WHILE"].String():
-			close--
-			if close == 0 {
+			closed--
+			if closed == 0 {
 				return
 			}
 		case OPERATIONS["WHILE_END"].String():
-			close++
+			closed++
 		}
 		if err != nil {
 			logError(errors.New("error: missing start loop"))
@@ -417,7 +620,7 @@ func (i *Interpreter) decreasePC() error {
 	return ErrorOutOfBounds
 }
 
-func hexToPixel(s string) (p *pixel.Pixel, err error) {
+func hexToPixel(s string) (p *Pixel, err error) {
 	var r, g, b int
 	switch len(s) {
 	case 6:
@@ -425,7 +628,7 @@ func hexToPixel(s string) (p *pixel.Pixel, err error) {
 		if err != nil {
 			return nil, ErrorInvalidHex
 		}
-		return &pixel.Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
+		return &Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
 	case 3:
 		_, err = fmt.Sscanf(s, "%1x%1x%1x", &r, &g, &b)
 		if err != nil {
@@ -435,7 +638,7 @@ func hexToPixel(s string) (p *pixel.Pixel, err error) {
 		r *= 17
 		g *= 17
 		b *= 17
-		return &pixel.Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
+		return &Pixel{R: uint8(r), G: uint8(g), B: uint8(b)}, nil
 	default:
 		err = ErrorInvalidHex
 		return nil, err
@@ -450,12 +653,21 @@ func loadConfigs(path string) error {
 	for op := range OPERATIONS {
 		value := cfg.Section("Colors").Key(op).String()
 		if len(value) != 0 {
-			new_px, err := hexToPixel(value)
+			newPx, err := hexToPixel(value)
 			if err != nil {
 				return ErrorInvalidHex
 			}
-			OPERATIONS[op] = new_px
+			OPERATIONS[op] = newPx
 		}
 	}
 	return err
+}
+
+func debug(i *Interpreter, step int, message string) {
+	fmt.Printf("\n############ Step %d ############\n", step)
+	fmt.Printf("Message: \033[33m%s\033[0m", message)
+	for index := i.stack.Size() - 1; index >= 0; index-- {
+		fmt.Printf("\n|%8d|", i.stack.GetItemAt(index))
+	}
+	fmt.Print("\nPress ENTER to step over:")
 }
