@@ -104,12 +104,10 @@ func (i *Interpreter) LoadImage(path string) error {
 
 	if err != nil {
 		return ErrorDecodeImage
-	} else {
-		i.image = img
-
-		i.width, i.height = i.image.Bounds().Max.X, i.image.Bounds().Max.Y
-		return nil
 	}
+	i.image = img
+	i.width, i.height = i.image.Bounds().Max.X, i.image.Bounds().Max.Y
+	return nil
 }
 
 func (i *Interpreter) GetImage() image.Image {
@@ -127,7 +125,6 @@ func (i *Interpreter) Run() {
 			_, e := fmt.Scanf("\n")
 			if e != nil {
 				logError(ErrorInputScanning)
-				return
 			}
 		}
 		err = i.increasePC()
@@ -148,343 +145,174 @@ func rgbaToPixel(r uint32, g uint32, b uint32, _ uint32) *Pixel {
 	return &Pixel{R: uint8(r / 257), G: uint8(g / 257), B: uint8(b / 257)}
 }
 
+func popOrErr(i *Interpreter) int {
+	val, err := i.stack.Pop()
+	if err != nil {
+		logError(err)
+	}
+	return val
+}
+
+func pushOrErr(i *Interpreter, val int) {
+	err := i.stack.Push(val)
+	if err != nil {
+		logError(err)
+	}
+}
+
+func scanfOrErr(format string, a *int) {
+	_, err := fmt.Scanf(format, a)
+	if err != nil {
+		logError(ErrorInputScanning)
+	}
+}
+
 func processPixel(pixel *Pixel, i *Interpreter) string {
 	switch pixel.String() {
 	case OPERATIONS["INPUT_INT"].String(): //Gets value from input as number and pushes it to the stack
 		var val int
-		_, err := fmt.Scanf("%d\n", &val)
-		if err != nil {
-			logError(ErrorInputScanning)
-			break
-		}
-		err = i.stack.Push(val)
-		if err != nil {
-			logError(err)
-		}
+		scanfOrErr("%d\n", &val)
+		pushOrErr(i, val)
 		if i.isDebug {
 			return "Pushed " + strconv.Itoa(val) + " into the stack"
-		} else {
-			return ""
 		}
 	case OPERATIONS["INPUT_ASCII"].String(): //Gets value from input as ASCII char and pushes it to the stack
-		var val rune
-		_, err := fmt.Scanf("%c\n", &val)
-		if err != nil {
-			logError(ErrorInputScanning)
-			break
-		}
-		err = i.stack.Push(int(val))
-		if err != nil {
-			logError(err)
-		}
+		var val int
+		scanfOrErr("%c\n", &val)
+		pushOrErr(i, val)
 		if i.isDebug {
-			return "Pushed " + string(val) + " into the stack"
-		} else {
-			return ""
+			return "Pushed " + string(rune(val)) + " into the stack"
 		}
 	case OPERATIONS["OUTPUT_INT"].String(): //Pops the top of the stack and outputs it as number
-		val, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		} else {
-			fmt.Printf("%d", val)
-			if i.isDebug {
-				return "Popped " + strconv.Itoa(val) + " from the stack and printed it in the console"
-			} else {
-				return ""
-			}
+		val := popOrErr(i)
+		fmt.Printf("%d", val)
+		if i.isDebug {
+			return "Popped " + strconv.Itoa(val) + " from the stack and printed it in the console"
 		}
 	case OPERATIONS["OUTPUT_ASCII"].String(): //Pops the top of the stack and outputs it as ASCII char
-		val, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		} else {
-			fmt.Printf("%c", val)
-			if i.isDebug {
-				return "Popped " + string(rune(val)) + " from the stack and printed it in the console"
-			} else {
-				return ""
-			}
+		val := popOrErr(i)
+		fmt.Printf("%c", val)
+		if i.isDebug {
+			return "Popped " + string(rune(val)) + " from the stack and printed it in the console"
 		}
 	case OPERATIONS["SUM"].String(): //Pops two numbers, adds them and pushes the result in the stack
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
 		sum := v1 + v2
-		err = i.stack.Push(sum)
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, sum)
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack their sum (" + strconv.Itoa(sum) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["SUB"].String(): //Pops two numbers, subtracts them and pushes the result in the stack
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
 		sub := v2 - v1
-		err = i.stack.Push(sub)
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, sub)
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack their difference (" + strconv.Itoa(sub) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["DIV"].String(): //Pops two numbers, divides them and pushes the result in the stack
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
 		div := v2 / v1
-		err = i.stack.Push(div)
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, div)
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their division (" + strconv.Itoa(div) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["MUL"].String(): //Pops two numbers, multiplies them and pushes the result in the stack
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
 		mul := v1 * v2
-		err = i.stack.Push(mul)
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, mul)
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack their multiplication (" + strconv.Itoa(mul) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["MOD"].String(): //Pops two numbers, and pushes the result of the modulus in the stack
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
 		mod := v2 % v1
-		err = i.stack.Push(mod)
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, mod)
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their modulus (" + strconv.Itoa(mod) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["RND"].String(): //Pops one number, and pushes in the stack a random number between [0, n[ where n is the number popped
-		n, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
+		n := popOrErr(i)
 		if n <= 0 {
 			logError(ErrorRandomGenerator)
-			break
 		}
 		random := rand.Intn(n)
-		err = i.stack.Push(random)
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, random)
 		if i.isDebug {
 			return "Random generated " + strconv.Itoa(random) + " [range 0 to " + strconv.Itoa(n-1) + "] and then pushed it into the stack"
-		} else {
-			return ""
 		}
 	case OPERATIONS["AND"].String(): //Pops two numbers, and pushes the result of AND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
 		result := Itob(v1) && Itob(v2)
-		err = i.stack.Push(Btoi(result))
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, Btoi(result))
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their AND (" + strconv.Itoa(Btoi(result)) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["OR"].String(): //Pops two numbers, and pushes the result of OR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
 		result := Itob(v1) || Itob(v2)
-		err = i.stack.Push(Btoi(result))
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, Btoi(result))
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their OR (" + strconv.Itoa(Btoi(result)) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["XOR"].String(): //Pops two numbers, and pushes the result of XOR [0 is false, anything else is true] [pushes 1 if true or 0 is false]
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
 		result := Itob(v1) != Itob(v2)
-		err = i.stack.Push(Btoi(result))
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, Btoi(result))
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their XOR (" + strconv.Itoa(Btoi(result)) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["NAND"].String(): //Pops two numbers, and pushes the result of NAND [0 is false, anything else is true] [pushes 1 if true or 0 is false]
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
 		result := nand(Itob(v1), Itob(v2))
-		err = i.stack.Push(Btoi(result))
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, Btoi(result))
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and then pushed into the stack the result of their NAND (" + strconv.Itoa(Btoi(result)) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["NOT"].String(): //Pops one number, and pushes the result of NOT [0 is false, anything else is true] [pushes 1 if true or 0 is false]
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
+		v1 := popOrErr(i)
 		result := Btoi(!Itob(v1))
-		err = i.stack.Push(result)
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, result)
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + " from the stack and then pushed into the stack its NOT (" + strconv.Itoa(result) + ")"
-		} else {
-			return ""
 		}
 	case OPERATIONS["POP"].String(): //Pops one number, and discardes it
-		v, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
+		v := popOrErr(i)
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v) + " from the stack"
-		} else {
-			return ""
 		}
 	case OPERATIONS["SWAP"].String(): //Swaps the top two items in the stack
-		v1, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
-		v2, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-		}
-		err = i.stack.Push(v1)
-		if err != nil {
-			logError(err)
-		}
-		err = i.stack.Push(v2)
-		if err != nil {
-			logError(err)
-		}
+		v1 := popOrErr(i)
+		v2 := popOrErr(i)
+		pushOrErr(i, v1)
+		pushOrErr(i, v2)
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(v1) + ", popped " + strconv.Itoa(v2) + " and pushed in reverse order to swap them"
-		} else {
-			return ""
 		}
 	case OPERATIONS["CYCLE"].String(): //Cycles clockwise the stack
 		i.stack.Cycle()
 		if i.isDebug {
 			return "Cycled clockwise by one step the stack"
-		} else {
-			return ""
 		}
 	case OPERATIONS["RCYCLE"].String(): //Cycles anti-clockwise the stack
 		i.stack.RCycle()
 		if i.isDebug {
 			return "Cycled counter-clockwise by one step the stack"
-		} else {
-			return ""
 		}
 	case OPERATIONS["DUP"].String(): //Duplicates the top of the stack
-		val, err := i.stack.Pop()
-		if err != nil {
-			logError(err)
-			break
-		}
-		err = i.stack.Push(val)
-		if err != nil {
-			logError(err)
-		}
-		err = i.stack.Push(val)
-		if err != nil {
-			logError(err)
-		}
+		val := popOrErr(i)
+		pushOrErr(i, val)
+		pushOrErr(i, val)
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(val) + " and then pushed it twice to duplicate it"
-		} else {
-			return ""
 		}
 	case OPERATIONS["REVERSE"].String(): //Reverses the content of the stack
 		i.stack.Reverse()
@@ -493,41 +321,30 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 		}
 	case OPERATIONS["QUIT"].String(): //Exits the program
 		fmt.Printf("\n")
-		os.Exit(1)
+		os.Exit(0)
 	case OPERATIONS["OUTPUT"].String(): //Outputs all the content of the stack without popping it
 		i.stack.Output()
 		if i.isDebug {
 			return "Outputted all the stack content"
-		} else {
-			return ""
 		}
 	case OPERATIONS["WHILE"].String():
 		if i.stack.Peek() == 0 { //exits the loop if top is false
 			jumpForward(i)
 			if i.isDebug {
 				return "Jumped forward for while loop"
-			} else {
-				return ""
 			}
 		}
 		if i.isDebug {
 			return "Entered in while loop"
-		} else {
-			return ""
 		}
 	case OPERATIONS["WHILE_END"].String():
 		jumpBack(i)
 		if i.isDebug {
 			return "Jumped back for while loop"
-		} else {
-			return ""
 		}
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
-		err := i.stack.Push(int(sum))
-		if err != nil {
-			logError(err)
-		}
+		pushOrErr(i, int(sum))
 		return "Pushed " + strconv.Itoa(int(sum)) + " into the stack"
 	}
 	return ""
