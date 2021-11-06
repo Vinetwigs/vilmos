@@ -41,7 +41,7 @@ USAGE:
    vilmos.exe [global options] command [command options] [arguments...]
 
 VERSION:
-   1.0.0
+   1.2.1
 
 AUTHOR:
    Vinetwigs <github.com/Vinetwigs>
