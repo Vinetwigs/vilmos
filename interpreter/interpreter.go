@@ -192,7 +192,7 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 		if i.isDebug {
 			return "Pushed " + strconv.Itoa(val) + " into the stack"
 		}
-	case OPERATIONS["INPUT_ASCII"].String(): //Gets value from input as ASCII char and pushes it to the stack
+	case OPERATIONS["INPUT_ASCII"].String(): //Gets values as ASCII char of a string and puts them into the stack
 		var val string
 		_, err := fmt.Scanf("%s\n", &val)
 		if err != nil {

@@ -22,7 +22,7 @@ If your vilmos programs encounters an error during runtime, its interpreter will
 |  Instruction 	| Description  	| Color code   	| Color preview   	|
 |:-:	|:-:	|:-:	|:-:	|
 |INPUT_INT 	|Gets value from stdio as number and pushes it into the stack   	|#ffffff   	| <div style="width:20px; height:20px; background: #fff; border: 1px solid black"></div>  	|
-|INPUT_ASCII   	|Gets value from input as ASCII char and pushes it to the stack   	|#e3e3e3   	|<div style="width:20px; height:20px; background: #e3e3e3;"></div>|
+|INPUT_ASCII   	|Gets values as ASCII char of a string and puts them into the stack   	|#e3e3e3   	|<div style="width:20px; height:20px; background: #e3e3e3;"></div>|
 |OUTPUT_INT   	|Pops the top of the stack and outputs it as number   	|#000000   	|<div style="width:20px; height:20px; background: #000000;"></div>   	|
 |OUTPUT_ASCII   	|Pops the top of the stack and outputs it as ASCII char   	|#4b4b4b   	|<div style="width:20px; height:20px; background: #4b4b4b;"></div>   	|
 |SUM   	|Pops two numbers, adds them and pushes the result in the stack   	|#00ced1   	|<div style="width:20px; height:20px; background: #00ced1;"></div>   	|

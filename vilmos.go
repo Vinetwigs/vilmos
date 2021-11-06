@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	version string = "1.2.0"
+	version string = "1.2.1"
 	usage   string = "Official vilmos language interpreter"
 )
 
