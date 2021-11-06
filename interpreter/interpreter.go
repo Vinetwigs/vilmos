@@ -15,6 +15,9 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+/*
+ * Interpreter's throwable errors
+ */
 var (
 	ErrorFileExtension   = errors.New("error: target image must be .png")
 	ErrorOpenImage       = errors.New("error: unable to open specified image")
@@ -27,6 +30,9 @@ var (
 	ErrorInputScanning   = errors.New("error: problems reading input")
 )
 
+/*
+ * A map of all interpreter's operations
+ */
 var OPERATIONS = map[string]*Pixel{
 	"INPUT_INT":    {R: 255, G: 255, B: 255}, //#ffffff -> INPUT INT
 	"OUTPUT_INT":   {R: 0, G: 0, B: 0},       //#000000 -> OUTPUT INT
@@ -55,6 +61,7 @@ var OPERATIONS = map[string]*Pixel{
 	"WHILE_END":    {R: 104, G: 71, B: 141},  //#68478d -> END WHILE LOOP
 }
 
+// Interpreter structure
 type Interpreter struct {
 	image   image.Image
 	stack   *Stack
@@ -64,6 +71,7 @@ type Interpreter struct {
 	isDebug bool
 }
 
+// Interpreter's constructor. Params are flags value from CLI app.
 func NewInterpreter(debug bool, configs string, maxSize int) *Interpreter {
 	rand.Seed(time.Now().UnixNano())
 
@@ -83,6 +91,7 @@ func NewInterpreter(debug bool, configs string, maxSize int) *Interpreter {
 	return interpreter
 }
 
+// Loads image from OS and puts the stream into the interpreter image reference
 func (i *Interpreter) LoadImage(path string) error {
 	fileExtension := filepath.Ext(path)
 
@@ -110,10 +119,10 @@ func (i *Interpreter) LoadImage(path string) error {
 	return nil
 }
 
-func (i *Interpreter) GetImage() image.Image {
-	return i.image
-}
-
+/*
+ * Executes the image interpretation doing Step() while the image program is terminated.
+ * It is responsible to increase the program counter and calling the debugger if the flag is set.
+ */
 func (i *Interpreter) Run() {
 	err := error(nil)
 	stepCount := 0
@@ -131,20 +140,24 @@ func (i *Interpreter) Run() {
 	}
 }
 
+// Interprets and executes next pixel in the given image
 func (i *Interpreter) Step() (bool, string) {
 	px := i.readPixel()
 	msg := processPixel(px, i)
 	return true, msg
 }
 
+// Reads pixel pointed by program counter and returns a Pixel struct reference
 func (i *Interpreter) readPixel() *Pixel {
 	return rgbaToPixel(i.image.At(i.pc.X, i.pc.Y).RGBA())
 }
 
+// Creates and returns a Pixel structure reference by rgba values
 func rgbaToPixel(r uint32, g uint32, b uint32, _ uint32) *Pixel {
 	return &Pixel{R: uint8(r / 257), G: uint8(g / 257), B: uint8(b / 257)}
 }
 
+// Tries to pop the stack. If it fails, an error will the throwed
 func popOrErr(i *Interpreter) int {
 	val, err := i.stack.Pop()
 	if err != nil {
@@ -153,6 +166,7 @@ func popOrErr(i *Interpreter) int {
 	return val
 }
 
+// Tries to push an item in the stack. If it fails, an error will be throwed.
 func pushOrErr(i *Interpreter, val int) {
 	err := i.stack.Push(val)
 	if err != nil {
@@ -160,6 +174,7 @@ func pushOrErr(i *Interpreter, val int) {
 	}
 }
 
+// Tries to read input from a given format. If it fails, an error will be throwed.
 func scanfOrErr(format string, a *int) {
 	_, err := fmt.Scanf(format, a)
 	if err != nil {
@@ -167,6 +182,7 @@ func scanfOrErr(format string, a *int) {
 	}
 }
 
+// Executes a given pixel. Returns a message for the debugging.
 func processPixel(pixel *Pixel, i *Interpreter) string {
 	switch pixel.String() {
 	case OPERATIONS["INPUT_INT"].String(): //Gets value from input as number and pushes it to the stack
@@ -177,11 +193,18 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 			return "Pushed " + strconv.Itoa(val) + " into the stack"
 		}
 	case OPERATIONS["INPUT_ASCII"].String(): //Gets value from input as ASCII char and pushes it to the stack
-		var val int
-		scanfOrErr("%c\n", &val)
-		pushOrErr(i, val)
+		var val string
+		_, err := fmt.Scanf("%s\n", &val)
+		if err != nil {
+			logError(ErrorInputScanning)
+		}
+
+		for _, char := range val {
+			pushOrErr(i, int(char))
+		}
+
 		if i.isDebug {
-			return "Pushed " + string(rune(val)) + " into the stack"
+			return "Pushed " + val + " into the stack"
 		}
 	case OPERATIONS["OUTPUT_INT"].String(): //Pops the top of the stack and outputs it as number
 		val := popOrErr(i)
@@ -350,16 +373,19 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 	return ""
 }
 
+// Logs an error to stdout and stops the interpreter
 func logError(e error) {
 	fmt.Printf("\n")
 	log.Println("\033[31m" + e.Error() + "\033[0m")
 	os.Exit(2)
 }
 
+// Converts an integer to bool
 func Itob(i int) bool {
 	return i != 0
 }
 
+// Converts a bool to integer
 func Btoi(b bool) int {
 	if b {
 		return 1
@@ -367,10 +393,12 @@ func Btoi(b bool) int {
 	return 0
 }
 
+// Returns the result of a NAND b
 func nand(a bool, b bool) bool {
 	return !(a && b)
 }
 
+// Jumps forward to the corresponding end while operation
 func jumpForward(i *Interpreter) {
 	open := 0
 	for {
@@ -391,6 +419,7 @@ func jumpForward(i *Interpreter) {
 	}
 }
 
+// Jumps back to the corresponding open while operation
 func jumpBack(i *Interpreter) {
 	closed := 0
 	for {
@@ -411,6 +440,7 @@ func jumpBack(i *Interpreter) {
 	}
 }
 
+// Increases program counter
 func (i *Interpreter) increasePC() error {
 	if i.pc.X+1 < i.width {
 		i.pc.X = i.pc.X + 1
@@ -424,6 +454,7 @@ func (i *Interpreter) increasePC() error {
 	return ErrorOutOfBounds
 }
 
+// Decreases program counter
 func (i *Interpreter) decreasePC() error {
 	if i.pc.X-1 >= 0 {
 		i.pc.X = i.pc.X - 1
@@ -437,6 +468,7 @@ func (i *Interpreter) decreasePC() error {
 	return ErrorOutOfBounds
 }
 
+// Converts a string representing an hex value to a Pixel structure. An error will be throwed if the format is wrong.
 func hexToPixel(s string) (p *Pixel, err error) {
 	var r, g, b int
 	switch len(s) {
@@ -462,6 +494,7 @@ func hexToPixel(s string) (p *Pixel, err error) {
 	}
 }
 
+// Loads configs from the given config file and overrides standard operations color codes with the custom ones
 func loadConfigs(path string) error {
 	cfg, err := ini.Load(path)
 	if err != nil {
@@ -480,6 +513,7 @@ func loadConfigs(path string) error {
 	return err
 }
 
+// Displays a debug message and the stack content in the specified step
 func debug(i *Interpreter, step int, message string) {
 	fmt.Printf("\n############ Step %d ############\n", step)
 	fmt.Printf("Message: \033[33m%s\033[0m", message)
