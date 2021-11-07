@@ -41,7 +41,6 @@ USAGE:
    vilmos.exe [global options] command [command options] [arguments...]
 
 VERSION:
-<<<<<<< HEAD
    2.0.0
 
 PS C:\Users\User\Desktop\Programmazione\Go\vilmos> go run .\vilmos.go help
@@ -53,9 +52,6 @@ USAGE:
 
 VERSION:
    2.0.0
-=======
-   1.2.1
->>>>>>> be294b22a3b275ee7cbc1ff8f7defff426b24f38
 
 AUTHOR:
    Vinetwigs <github.com/Vinetwigs>
