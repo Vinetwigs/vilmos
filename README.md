@@ -25,7 +25,7 @@ Make sure you have at least installed Go v1.17 or your paintings may be blue :so
 
 ## Installing
 ```
-go install github.com/Vinetwigs/vilmos@v1.2.1
+go install github.com/Vinetwigs/vilmos@v2.0.0
 ```
 Now you can start using the interpreter via terminal using 'vilmos' command
 
@@ -41,7 +41,17 @@ USAGE:
    vilmos.exe [global options] command [command options] [arguments...]
 
 VERSION:
-   1.0.0
+   2.0.0
+
+PS C:\Users\User\Desktop\Programmazione\Go\vilmos> go run .\vilmos.go help
+NAME:
+   vilmos - Official vilmos language interpreter
+
+USAGE:
+   vilmos.exe [global options] command [command options] [arguments...]
+
+VERSION:
+   2.0.0
 
 AUTHOR:
    Vinetwigs <github.com/Vinetwigs>
@@ -51,11 +61,12 @@ COMMANDS:
    help, h     Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --debug, -d                                         enable debug mode (default: false)
-   --config FILE_PATH, --conf FILE_PATH, -c FILE_PATH  load configuration from FILE_PATH for custom color codes
-   --max_size value, -m value                          set max memory size (default: -1)
-   --help, -h                                          show help (default: false)
-   --version, -V, -v                                   Shows installed version (default: false)
+   --debug, -d                                                   enable debug mode (default: false)
+   --config FILE_PATH, --conf FILE_PATH, -c FILE_PATH            load configuration from FILE_PATH for custom color codes
+   --max_size value, -m value                                    set max memory size (default: -1)
+   --instruction_size value, --is value, --size value, -s value  set instruction size (default: 1)
+   --help, -h                                                    show help (default: false)
+   --version, -V, -v                                             Shows installed version (default: false)                        Shows installed version (default: false)
 ```
 
 ###### Interpret program
@@ -79,6 +90,15 @@ Once you have chosen your favourite colors, your program execution must be in th
 `vilmos -c <CONFIG_FILE_PATH> <FILE_PATH>`.
 You can optionally use longer versions for config flag:
 `vilmos --conf <CONFIG_FILE_PATH> <FILE_PATH>` or `vilmos --config <CONFIG_FILE_PATH> <FILE_PATH>`.
+
+###### Set instructions size
+To specify the pixel size of each instruction in your colorful vilmos program, there is -instruction_size flag to help you.
+`vilmos -s <size> <FILE_PATH>`. You can optionally use the alternative forms:
+1. `vilmos -instruction_size <size> <FILE_PATH>`
+2. `vilmos -size <size> <FILE_PATH>`
+
+When you specify the instructions size, make sure that each instruction in your vilmos program is a square having the specified size as sides length. This permits to use bigger images to make your vilmos program more appealing.
+Read [language specifications](https://github.com/Vinetwigs/vilmos/blob/main/LANGUAGE.md) for more informations about 
 
 ###### Set maximum memory size
 To specify a maximum size for the memory usable for your painting execution you have to use -m flag.

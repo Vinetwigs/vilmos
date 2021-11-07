@@ -34,6 +34,9 @@ func (stack *Stack) Push(val int) error {
 }
 
 func (stack *Stack) Peek() int {
+	if stack.IsEmpty() {
+		return 0
+	}
 	return stack.items[len(stack.items)-1]
 }
 
@@ -89,4 +92,8 @@ func (stack *Stack) Output() {
 
 func (stack *Stack) GetItemAt(i int) int {
 	return stack.items[i]
+}
+
+func (stack *Stack) Clear() {
+	stack.items = nil
 }

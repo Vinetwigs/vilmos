@@ -1,10 +1,12 @@
 package interpreter
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"image"
 	"image/png"
+	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -28,6 +30,11 @@ var (
 	ErrorLoadConfig      = errors.New("error: unable to load config file")
 	ErrorCloseFile       = errors.New("error: unable to close the file")
 	ErrorInputScanning   = errors.New("error: problems reading input")
+	ErrorOpenFile        = errors.New("error: unable to open specified file")
+	ErrorWriteFile       = errors.New("error: error on writing on opened file")
+	ErrorReadFile        = errors.New("error: error on reading opened file")
+	ErrorInvalidString   = errors.New("error: invalid string into the stack")
+	ErrorFileAlreadyOpen = errors.New("error: trying to open multiple files")
 )
 
 /*
@@ -35,7 +42,7 @@ var (
  */
 var OPERATIONS = map[string]*Pixel{
 	"INPUT_INT":    {R: 255, G: 255, B: 255}, //#ffffff -> INPUT INT
-	"OUTPUT_INT":   {R: 0, G: 0, B: 0},       //#000000 -> OUTPUT INT
+	"OUTPUT_INT":   {R: 0, G: 0, B: 1},       //#000001 -> OUTPUT INT
 	"SUM":          {R: 0, G: 206, B: 209},   //#00ced1 -> SUM
 	"SUB":          {R: 255, G: 165, B: 0},   //#ffa500 -> SUBTRACTION
 	"DIV":          {R: 138, G: 43, B: 226},  //#8a2be2 -> DIVISION
@@ -59,28 +66,37 @@ var OPERATIONS = map[string]*Pixel{
 	"OUTPUT":       {R: 155, G: 34, B: 66},   //#9B2242 -> OUTPUT ALL STACK
 	"WHILE":        {R: 46, G: 26, B: 71},    //#2e1a47 -> START WHILE LOOP
 	"WHILE_END":    {R: 104, G: 71, B: 141},  //#68478d -> END WHILE LOOP
+	"FILE_OPEN":    {R: 145, G: 246, B: 139}, //#91f68b -> OPEN FILE
+	"FILE_CLOSE":   {R: 47, G: 237, B: 35},   //#2fed23 -> CLOSE FILE
 }
 
 // Interpreter structure
 type Interpreter struct {
-	image   image.Image
-	stack   *Stack
-	pc      image.Point
-	width   int
-	height  int
-	isDebug bool
+	image           image.Image
+	stack           *Stack
+	pc              image.Point
+	width           int
+	height          int
+	isDebug         bool
+	instructionSize int
+	openedFile      *os.File
 }
 
 // Interpreter's constructor. Params are flags value from CLI app.
-func NewInterpreter(debug bool, configs string, maxSize int) *Interpreter {
+func NewInterpreter(debug bool, configs string, maxSize int, instructionSize int) *Interpreter {
 	rand.Seed(time.Now().UnixNano())
 
-	interpreter := new(Interpreter)
-	interpreter.image = nil
-	interpreter.pc = image.Point{X: 0, Y: 0}
-	interpreter.stack = NewStack(maxSize)
+	interpreter := &Interpreter{
+		image:           nil,
+		stack:           NewStack(maxSize),
+		pc:              image.Point{X: 0, Y: 0},
+		width:           0,
+		height:          0,
+		isDebug:         debug,
+		instructionSize: instructionSize,
+		openedFile:      nil,
+	}
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
-	interpreter.isDebug = debug
 
 	if configs != "" {
 		err := loadConfigs(configs)
@@ -187,20 +203,46 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 	switch pixel.String() {
 	case OPERATIONS["INPUT_INT"].String(): //Gets value from input as number and pushes it to the stack
 		var val int
-		scanfOrErr("%d\n", &val)
-		pushOrErr(i, val)
+		if hasOpenedFile(i) {
+
+			content, err := readFromFile(i)
+			if err != nil {
+				logError(err)
+			}
+			if i.isDebug {
+				return "Pushed " + truncateString(content, 50) + " into the stack"
+			}
+
+		} else {
+			scanfOrErr("%d\n", &val)
+			pushOrErr(i, val)
+		}
 		if i.isDebug {
 			return "Pushed " + strconv.Itoa(val) + " into the stack"
 		}
 	case OPERATIONS["INPUT_ASCII"].String(): //Gets values as ASCII char of a string and puts them into the stack
 		var val string
-		_, err := fmt.Scanf("%s\n", &val)
-		if err != nil {
-			logError(ErrorInputScanning)
-		}
+		if hasOpenedFile(i) {
 
-		for _, char := range val {
-			pushOrErr(i, int(char))
+			content, err := readFromFile(i)
+			if err != nil {
+				logError(err)
+			}
+			if i.isDebug {
+				return "Pushed " + truncateString(content, 50) + " into the stack"
+			}
+
+		} else {
+			_, err := fmt.Scanf("%s\n", &val)
+			if err != nil {
+				logError(ErrorInputScanning)
+			}
+
+			pushOrErr(i, int('\000'))
+			for _, char := range val {
+				pushOrErr(i, int(char))
+			}
+
 		}
 
 		if i.isDebug {
@@ -208,15 +250,34 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 		}
 	case OPERATIONS["OUTPUT_INT"].String(): //Pops the top of the stack and outputs it as number
 		val := popOrErr(i)
-		fmt.Printf("%d", val)
+		if hasOpenedFile(i) {
+			_, err := i.openedFile.WriteString(strconv.Itoa(val))
+			if err != nil {
+				logError(ErrorWriteFile)
+			}
+			return "Wrote " + strconv.Itoa(val) + " to the opened file (" + i.openedFile.Name() + ")"
+		} else {
+			fmt.Printf("%d", val)
+		}
 		if i.isDebug {
 			return "Popped " + strconv.Itoa(val) + " from the stack and printed it in the console"
 		}
 	case OPERATIONS["OUTPUT_ASCII"].String(): //Pops the top of the stack and outputs it as ASCII char
-		val := popOrErr(i)
-		fmt.Printf("%c", val)
+		str, err := buildStringFromStack(i)
+		if err != nil {
+			logError(ErrorInvalidString)
+		}
+		if hasOpenedFile(i) {
+			_, err := i.openedFile.WriteString(str)
+			if err != nil {
+				logError(ErrorWriteFile)
+			}
+			return "Wrote " + str + " to the opened file (" + i.openedFile.Name() + ")"
+		} else {
+			fmt.Printf("%s", str)
+		}
 		if i.isDebug {
-			return "Popped " + string(rune(val)) + " from the stack and printed it in the console"
+			return "Popped " + str + " from the stack and printed it in the console"
 		}
 	case OPERATIONS["SUM"].String(): //Pops two numbers, adds them and pushes the result in the stack
 		v1 := popOrErr(i)
@@ -365,6 +426,28 @@ func processPixel(pixel *Pixel, i *Interpreter) string {
 		if i.isDebug {
 			return "Jumped back for while loop"
 		}
+	case OPERATIONS["FILE_OPEN"].String():
+		if hasOpenedFile(i) {
+			logError(ErrorFileAlreadyOpen)
+		}
+		var err error = nil
+		fileName, err := buildStringFromStack(i)
+		if err != nil {
+			logError(err)
+		}
+		i.openedFile, err = openFile(fileName)
+		if err != nil {
+			logError(err)
+		}
+		return "Opened file " + i.openedFile.Name()
+	case OPERATIONS["FILE_CLOSE"].String():
+		fileName := i.openedFile.Name()
+		err := i.openedFile.Close()
+		if err != nil {
+			logError(ErrorCloseFile)
+		}
+		i.openedFile = nil
+		return "Closed file " + fileName
 	default: //every color not in the list above pushes into the stack the sum of red, green and blue values of the pixel
 		sum := pixel.R + pixel.G + pixel.B
 		pushOrErr(i, int(sum))
@@ -442,12 +525,12 @@ func jumpBack(i *Interpreter) {
 
 // Increases program counter
 func (i *Interpreter) increasePC() error {
-	if i.pc.X+1 < i.width {
-		i.pc.X = i.pc.X + 1
+	if i.pc.X+i.instructionSize < i.width {
+		i.pc.X = i.pc.X + i.instructionSize
 		return nil
 	}
-	if i.pc.Y+1 < i.height {
-		i.pc.Y = i.pc.Y + 1
+	if i.pc.Y+i.instructionSize < i.height {
+		i.pc.Y = i.pc.Y + i.instructionSize
 		i.pc.X = 0
 		return nil
 	}
@@ -456,13 +539,13 @@ func (i *Interpreter) increasePC() error {
 
 // Decreases program counter
 func (i *Interpreter) decreasePC() error {
-	if i.pc.X-1 >= 0 {
-		i.pc.X = i.pc.X - 1
+	if i.pc.X-i.instructionSize >= 0 {
+		i.pc.X = i.pc.X - i.instructionSize
 		return nil
 	}
-	if i.pc.Y-1 >= 0 {
-		i.pc.Y = i.pc.Y - 1
-		i.pc.X = i.width - 1
+	if i.pc.Y-i.instructionSize >= 0 {
+		i.pc.Y = i.pc.Y - i.instructionSize
+		i.pc.X = i.width - i.instructionSize
 		return nil
 	}
 	return ErrorOutOfBounds
@@ -521,4 +604,73 @@ func debug(i *Interpreter, step int, message string) {
 		fmt.Printf("\n|%8d|", i.stack.GetItemAt(index))
 	}
 	fmt.Print("\nPress ENTER to step over:")
+}
+
+func buildStringFromStack(i *Interpreter) (string, error) {
+	var (
+		result string = ""
+		ch     rune   = ' '
+	)
+	for index := i.stack.Size() - 1; index >= 0; index-- {
+		ch = rune(popOrErr(i))
+		if ch == '\000' {
+			return result, nil
+		}
+		result += string(ch)
+	}
+	return "", ErrorInvalidString
+}
+
+func openFile(path string) (*os.File, error) {
+	var (
+		err  error
+		file *os.File
+	)
+	x := os.O_CREATE | os.O_APPEND | os.O_RDWR
+	file, err = os.OpenFile(path, x, 0644)
+	if err != nil {
+		return nil, ErrorOpenFile
+	}
+	return file, nil
+}
+
+func hasOpenedFile(i *Interpreter) bool {
+	return i.openedFile != nil
+}
+
+func truncateString(str string, num int) string {
+	bnoden := str
+	if len(str) > num {
+		if num > 3 {
+			num -= 3
+		}
+		bnoden = str[0:num] + "..."
+	}
+	return bnoden
+}
+
+func readFromFile(i *Interpreter) (string, error) {
+	reader := bufio.NewReader(i.openedFile)
+	var ch rune = '1'
+
+	var content string
+
+	pushOrErr(i, int('\000'))
+	for ch != '\000' {
+		ch, _, err := reader.ReadRune()
+
+		if err != nil {
+
+			if err != io.EOF {
+
+				return "", ErrorReadFile
+			}
+
+			break
+		}
+
+		content += string(ch)
+		pushOrErr(i, int(ch))
+	}
+	return content, nil
 }

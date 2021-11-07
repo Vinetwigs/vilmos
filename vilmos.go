@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	version string = "1.2.1"
+	version string = "2.0.0"
 	usage   string = "Official vilmos language interpreter"
 )
 
@@ -23,9 +23,10 @@ var (
 
 func main() {
 	var (
-		debug      bool
-		configPath string
-		maxSize    int
+		debug           bool
+		configPath      string
+		maxSize         int
+		instructionSize int
 	)
 
 	cli.VersionFlag = &cli.BoolFlag{
@@ -66,12 +67,19 @@ func main() {
 				Value:       -1,
 				Destination: &maxSize,
 			},
+			&cli.IntFlag{
+				Name:        "instruction_size",
+				Aliases:     []string{"is", "size", "s"},
+				Usage:       "set instruction size",
+				Value:       1,
+				Destination: &instructionSize,
+			},
 		},
 		Action: func(c *cli.Context) error {
 			var filePath string
 			if c.NArg() > 0 {
 				filePath = c.Args().Get(0)
-				i := inter.NewInterpreter(debug, configPath, maxSize)
+				i := inter.NewInterpreter(debug, configPath, maxSize, instructionSize)
 
 				err := i.LoadImage(filePath)
 				if err != nil {
