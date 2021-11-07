@@ -41,17 +41,7 @@ USAGE:
    vilmos.exe [global options] command [command options] [arguments...]
 
 VERSION:
-   2.0.0
-
-PS C:\Users\User\Desktop\Programmazione\Go\vilmos> go run .\vilmos.go help
-NAME:
-   vilmos - Official vilmos language interpreter
-
-USAGE:
-   vilmos.exe [global options] command [command options] [arguments...]
-
-VERSION:
-   2.0.0
+   2.0.1
 
 AUTHOR:
    Vinetwigs <github.com/Vinetwigs>
