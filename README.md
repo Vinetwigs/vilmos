@@ -25,7 +25,7 @@ Make sure you have at least installed Go v1.17 or your paintings may be blue :so
 
 ## Installing
 ```
-go install github.com/Vinetwigs/vilmos@v2.0.0
+go install github.com/Vinetwigs/vilmos@v2.0.1
 ```
 Now you can start using the interpreter via terminal using 'vilmos' command
 

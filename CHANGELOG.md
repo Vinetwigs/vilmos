@@ -5,6 +5,15 @@ All changes to vilmos language and vilmos interpreter will be documented in this
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.1] - 2021-11-07
+Beautified code  
+ 
+### Added
+### Changed
+### Fixed
+ 
+- Fixe import bugs cause by major versione update
+
 ## [2.0.0] - 2021-11-07
 Scaled images support, file management and strings support
 

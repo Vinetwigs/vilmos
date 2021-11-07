@@ -6,13 +6,13 @@ import (
 	"log"
 	"os"
 
-	inter "github.com/Vinetwigs/vilmos/interpreter"
+	inter "github.com/Vinetwigs/vilmos/v2/interpreter"
 
 	"github.com/urfave/cli/v2"
 )
 
 const (
-	version string = "2.0.0"
+	version string = "2.0.1"
 	usage   string = "Official vilmos language interpreter"
 )
 
