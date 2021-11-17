@@ -83,7 +83,7 @@ This simple program, will output a cool ASCII art. Let's see it in action:
 ![input-gif](./docs/assets/input_file.gif)
 
 Alternative forms:
-* `vilmos --input <FILE_PATH>`
+* `vilmos --input <FILE_PATH>` 
 
 [Back to top](#table-of-contents)
 
