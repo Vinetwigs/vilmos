@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	version string = "2.0.1"
+	version string = "2.1.1"
 	usage   string = "Official vilmos language interpreter"
 )
 
@@ -27,6 +27,7 @@ func main() {
 		configPath      string
 		maxSize         int
 		instructionSize int
+		imagePath       string
 	)
 
 	cli.VersionFlag = &cli.BoolFlag{
@@ -63,33 +64,43 @@ func main() {
 			&cli.IntFlag{
 				Name:        "max_size",
 				Aliases:     []string{"m"},
-				Usage:       "set max memory size",
+				Usage:       "set max memory `SIZE`",
 				Value:       -1,
 				Destination: &maxSize,
 			},
 			&cli.IntFlag{
 				Name:        "instruction_size",
 				Aliases:     []string{"is", "size", "s"},
-				Usage:       "set instruction size",
+				Usage:       "set instruction `SIZE`",
 				Value:       1,
 				Destination: &instructionSize,
 			},
+			&cli.StringFlag{
+				Name:        "input",
+				Aliases:     []string{"i"},
+				Usage:       "input `FILE_PATH`",
+				Value:       "",
+				Destination: &imagePath,
+			},
 		},
 		Action: func(c *cli.Context) error {
-			var filePath string
-			if c.NArg() > 0 {
-				filePath = c.Args().Get(0)
-				i := inter.NewInterpreter(debug, configPath, maxSize, instructionSize)
+			if imagePath != "" {
+				i := inter.NewInterpreter(debug, maxSize, instructionSize)
 
-				err := i.LoadImage(filePath)
+				if configPath != "" {
+					err := inter.LoadConfigs(configPath)
+					if err != nil {
+						logError(err)
+					}
+				}
+
+				err := i.LoadImage(imagePath)
 				if err != nil {
 					logError(err)
-					os.Exit(1)
 				}
 				i.Run()
 			} else {
 				logError(ErrorNoImage)
-				os.Exit(1)
 			}
 			return nil
 		},

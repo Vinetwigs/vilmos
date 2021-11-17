@@ -7,119 +7,244 @@
 [![License](https://img.shields.io/badge/License-Apache_License_2.0-orange)](#license)
 [![issues - vilmos](https://img.shields.io/github/issues/Vinetwigs/vilmos)](https://github.com/Vinetwigs/vilmos/issues)
 
-<div>
-   <h1 align="center">
-      vilmos interpreter - let's put software in museums🎨
-   </h1>
-</div>
+<h1 align="center">vilmos interpreter</h1>
 
-<div align="center">
-   Uninstall all your IDE's, close the terminal, install your favourite drawing software and start programming today using only your favourite colors.
-   Create your custom palettes, take your brushes and paint your softwares using <a href="./LANGUAGE.md">vilmos language</a>.
-   
-   <strong>:exclamation: Brushes not included in the kit :exclamation:</strong>
-</div>
+<p align="center">
+   <i>
+      Official <a href="./docs/LANGUAGE.md">vilmos language</a> interpreter.
+      Thanks to this application you will be able to see your paintings 
+      come to life. The interpreter offers many useful tools to help your programming sessions!
+   </i>
+</p>
 
-## Prerequisites
-Make sure you have at least installed Go v1.17 or your paintings may be blue :sob:
+## Table of Contents
 
-## Installing
+1. [Prerequisites](#prerequisites)
+2. [References](#references)
+3. [Installing](#installing)
+4. [How to use](#how-to-use)
+   1. [Get help](#get-help)
+   2. [Run a program](#run-a-program)
+   3. [Use bigger images](#use-bigger-images)
+   4. [Debugger](#debugger)
+   5. [Set max memory size](#set-max-memory-size)
+5. [Version](#version)
+6. [Author](#author)
+7. [Contributors](#contributors)
+8. [LICENSE](#license)
+
+
+### References
+
+* [Language Specification](./docs/LANGUAGE.md)
+* [Changelog](./docs/CHANGELOG.md)
+
+[Back to top](#table-of-contents)
+
+### Prerequisites
+
+* Make sure you have at least installed `Go v1.17` or your paintings may be blue.
+* Knowledge of [vilmos language](./docs/LANGUAGE.md)
+
+[Back to top](#table-of-contents)
+
+### Installing
+
 ```
 go install github.com/Vinetwigs/vilmos/v2
 ```
-Now you can start using the interpreter via terminal using 'vilmos' command
+
+[Back to top](#table-of-contents)
 
 ## How to use
-###### Getting help
-`vilmos help` prints the complete usage of vilmos interpreter. You can optionally use `vilmos -h` as short form or `vilmos --help`.
 
-```
-NAME:
-   vilmos - Official vilmos language interpreter
+### Get help
+Use `vilmos help` command to get informations about interpreter usage.
 
-USAGE:
-   vilmos.exe [global options] command [command options] [arguments...]
+![help-gif](./docs/assets/help.gif)
 
-VERSION:
-   2.0.0
+Optionally you can use alternative forms:
+* `vilmos -h`
+* `vilmos --help`
 
-PS C:\Users\User\Desktop\Programmazione\Go\vilmos> go run .\vilmos.go help
-NAME:
-   vilmos - Official vilmos language interpreter
+[Back to top](#table-of-contents)
 
-USAGE:
-   vilmos.exe [global options] command [command options] [arguments...]
+### Run a program
 
-VERSION:
-   2.0.0
+`vilmos -i <FILE_PATH>` is the easiest way to see your colors in action. Make sure your image is in **.png format**.
+By default, each instruction is rapresented by a pixel.
 
-AUTHOR:
-   Vinetwigs <github.com/Vinetwigs>
+For instance, let's try executing this vilmos program:
 
-COMMANDS:
-   version, v  show installed version
-   help, h     Shows a list of commands or help for one command
+![file-input](./docs/assets/vilmos_small.png)
 
-GLOBAL OPTIONS:
-   --debug, -d                                                   enable debug mode (default: false)
-   --config FILE_PATH, --conf FILE_PATH, -c FILE_PATH            load configuration from FILE_PATH for custom color codes
-   --max_size value, -m value                                    set max memory size (default: -1)
-   --instruction_size value, --is value, --size value, -s value  set instruction size (default: 1)
-   --help, -h                                                    show help (default: false)
-   --version, -V, -v                                             Shows installed version (default: false)                        Shows installed version (default: false)
-```
+This simple program, will output a cool ASCII art. Let's see it in action:
 
-###### Interpret program
-`vilmos <FILE_PATH>` is the easiest way to see your colors come to life. Make sure your image is in .png format.
+![input-gif](./docs/assets/input_file.gif)
 
-###### Debug program
-vilmos debugger lets you execute your programs step by step printing in each step the content of the stack.
-To enable debugger mode all you need to do is putting -d flag in interpreter terminal execution.
-`vilmos -d <FILE_PATH>`.
-There is also a longer version for the flag: `vilmos --debug <FILE_PATH>`.
+Alternative forms:
+* `vilmos --input <FILE_PATH>`
 
-###### Use custom color codes
-The true power of vilmos visual language is the capability of setting custom color codes for your programs.
-To achieve that, you have to simply specify in a config file (example config file provided in the repository) a color code for the instruction.
+[Back to top](#table-of-contents)
+
+### Use bigger images
+
+The program we used above is really cool in my opinion but it's kind too small.
+Let's use a bigger version of the same program to make it more appealing.
+In this case, each instruction of our program it is no longer rapresented by a single pixel   
+but by a 200x200px square.
+
+<img src="./docs/assets/vilmos_big.png">
+
+Perfect! Now we can clearly see each instruction of our program.
+
+When we will run this program, we have to tell to the interpreter that the size of each instruction is a 200px per side square.
+This is easily achievable using `-s <SIZE>` flag.
+Full instruction will be `vilmos -s 200 -i ./vilmos_big.png`
+
+Let's see it in action:
+
+![big-input-gif](./docs/assets/input_big.gif)
+
+Alternative forms:
+
+* `vilmos --instruction_size <SIZE>`
+* `vilmos --size <SIZE>`
+* `vilmos --is <SIZE>`
+
+[Back to top](#table-of-contents)
+
+### Debugger
+
+Thanks to this useful tools integrated in vilmos interpreter, it is possible to execute our programs   
+step by step printing in each step the stack content and a message explaing what the interpreter have done.   
+This feature is useful to debug them and find & fix possible bugs.
+
+To enable debugger mode all you need to do is using `-d` flag when running your painting.
+
+This time we will use the following program:
+
+![counter-alt](./docs/assets/counter.png)
+
+This charming program will simply put into the stack integers from 1 to MAX_INT without outputting anything.   
+To see if our program works we will see the stack content through the debugger feature.
+
+![debugger-gif](./docs/assets/debugger.gif)
+
+Alternative forms:
+* `vilmos --debug`
+
+[Back to top](#table-of-contents)
+
+### Set max memory size
+
+The problem with the above program execution is that it will run until it's manually stopped, because   
+by default there is no maximum memory size.
+
+To specify a maximum size for the memory usable for your painting execution you have to use `vilmos -m <size>` flag.
+Now if you try to put in memory another element when the stack is full, an error will be launched    
+and the execution will be stopped.
+
+Let's see it in action setting the max stack size to 200 elements:
+
+![max-size-gif](./docs/assets/max_size.gif)
+
+Alternative forms:
+* `vilmos --max_size <SIZE>`
+
+[Back to top](#table-of-contents)
+
+### Use custom color codes
+
+The true power of vilmos visual language is the capability of setting custom color codes for the instructions.   
+This lets you have total control on your Art.
+
+To achieve that, you have to compile a config.ini file provided by this repository.
+To compile the configs, you have to specify color codes to override to the relative operation.
+
+**NOTICE:** you can see default instructions color codes in [language specification](./docs/LANGUAGE.md)
+
 The color codes must be in the HEX format (without the #) and there are two supported formats:
 
 1. Full Hex code (a044d1)
 2. Short Hex code (fff)
 
-Once you have chosen your favourite colors, your program execution must be in the format:
-`vilmos -c <CONFIG_FILE_PATH> <FILE_PATH>`.
-You can optionally use longer versions for config flag:
-`vilmos --conf <CONFIG_FILE_PATH> <FILE_PATH>` or `vilmos --config <CONFIG_FILE_PATH> <FILE_PATH>`.
+Once you have chosen your favourite colors, you can set custom colors through the following flag:
+`vilmos -c <CONFIG_FILE_PATH>`.
 
-###### Set instructions size
-To specify the pixel size of each instruction in your colorful vilmos program, there is -instruction_size flag to help you.
-`vilmos -s <size> <FILE_PATH>`. You can optionally use the alternative forms:
-1. `vilmos -instruction_size <size> <FILE_PATH>`
-2. `vilmos -size <size> <FILE_PATH>`
 
-When you specify the instructions size, make sure that each instruction in your vilmos program is a square having the specified size as sides length. This permits to use bigger images to make your vilmos program more appealing.
-Read [language specifications](https://github.com/Vinetwigs/vilmos/blob/main/LANGUAGE.md) for more informations about 
+For instance, we will override instructions to the image seen above to make it use orange pallette insteand of blue.
 
-###### Set maximum memory size
-To specify a maximum size for the memory usable for your painting execution you have to use -m flag.
-`vilmos -m <size> <FILE_PATH>`.
-You can optionally use the longer version: `vilmos --max_size <size> <FILE_PATH>`.
-If you try to put in memory another element when the stack is full, an error will be launched and the execution will be stopped.
+New version of out program will be:
 
-###### Version
+![config-counter-alt](./docs/assets/config_counter.png)
+
+And we will compile configs.ini file in the following way to match the colors we have chosen:
+
+```ini
+[Colors]
+AND=
+CYCLE=
+DIV=
+DUP=ffb732
+FILE_CLOSE=
+FILE_OPEN=
+INPUT_ASCII=
+INPUT_INT=
+LSHIFT=
+MOD=
+MUL=
+NAND=
+NOT=
+OR=
+OUTPUT=
+OUTPUT_ASCII=
+OUTPUT_INT=
+POP=
+QUIT=
+RCYCLE=
+REVERSE=
+RND=
+RSHIFT=
+SUB=
+SUM=ffcb4b
+SWAP=
+WHILE=ffa300
+WHILE_END=ff834b
+XOR=
+```
+
+Let's see this new version in action:
+
+![configs-gif](./docs/assets/configs.gif)
+
+Alternative forms:
+* `vilmos --conf <CONFIG_FILE_PATH>`
+* `vilmos --config <CONFIG_FILE_PATH>`
+
+[Back to top](#table-of-contents)
+
+## Version
+
 To print actual vilmos interpreter version you have different choices:
-1. `vilmos version`
-2. `vilmos --version`
-3. `vilmos -V`
-4. `vilmos -v`
+* `vilmos version`
+* `vilmos --version`
+* `vilmos -V`
+* `vilmos -v`
+
+[Back to top](#table-of-contents)
 
 ## Author
 - [Vinetwigs](https://github.com/Vinetwigs)
+
+[Back to top](#table-of-contents)
 
 ## Contributors
 <a href="https://github.com/Vinetwigs/vilmos/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Vinetwigs/vilmos" />
 </a>
+
+[Back to top](#table-of-contents)
 
 ## License
 ```text
@@ -137,3 +262,5 @@ To print actual vilmos interpreter version you have different choices:
    See the License for the specific language governing permissions and
    limitations under the License.
 ```
+
+[Back to top](#table-of-contents)
