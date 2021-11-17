@@ -5,7 +5,7 @@ All changes to vilmos language and vilmos interpreter will be documented in this
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.1.1] - ????-??-??
+## [2.1.1] - 2021-11-17
 Standardized types, bitwise operators, new documentation, first tests.
  
 ### Added
