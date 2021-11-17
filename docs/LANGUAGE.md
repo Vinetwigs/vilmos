@@ -57,7 +57,7 @@ Instruction set is strongly inspired by [SuperStack!](https://esolangs.org/wiki/
 <i>Execution order example</i>
 
 
-![exec-order-alt](.\assets\execution_order.jpg)    
+![exec-order-alt](./assets/execution_order.jpg)    
 
 [Back to top](#table-of-contents)
 
